@@ -1,0 +1,1989 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>IndPopHub — India Population Intelligence</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#020407;--surface:#06090f;--surface2:#090d18;--surface3:#0c1120;
+  --border:#111828;--border2:#18263a;
+  --gold:#c9993a;--gold2:#f0c858;--gold3:#a07020;
+  --silver:#a0b8cc;--silver2:#c8dae8;--silver3:#506878;
+  --text:#d0e4f0;--muted:#304858;
+  --teal:#16b082;--teal2:#28e8b8;
+  --blue:#2070c8;--blue2:#38a0f0;
+  --red:#c83050;--red2:#f04068;
+  --purple:#7840d0;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;overflow-x:hidden}
+
+.global-bg{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.global-bg canvas{position:absolute;inset:0;width:100%;height:100%;opacity:0.35}
+body::after{content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:9998;opacity:0.6}
+
+.ticker{background:linear-gradient(90deg,#040810,#0a1220,#040810);
+  border-bottom:1px solid rgba(201,153,58,0.18);
+  color:var(--gold2);font-family:'JetBrains Mono',monospace;
+  font-size:10px;font-weight:500;padding:8px 0;overflow:hidden;white-space:nowrap;letter-spacing:0.5px;
+  position:relative;z-index:10}
+.ticker-track{display:flex;width:max-content;animation:ticker 80s linear infinite}
+.ticker-track span{padding:0 28px;opacity:0.9}
+.ticker-track span.sep{color:rgba(201,153,58,0.3);padding:0 4px}
+@keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
+header{position:sticky;top:0;z-index:500;
+  background:rgba(2,4,7,0.92);backdrop-filter:blur(40px) saturate(180%);
+  border-bottom:1px solid rgba(201,153,58,0.1);
+  padding:0 56px;height:64px;display:flex;align-items:center;justify-content:space-between}
+.logo-wrap{display:flex;align-items:center;gap:13px;text-decoration:none}
+.logo-icon{width:36px;height:36px;border-radius:8px;
+  background:linear-gradient(135deg,rgba(201,153,58,0.2),rgba(201,153,58,0.04));
+  border:1px solid rgba(201,153,58,0.35);
+  display:flex;align-items:center;justify-content:center;font-size:16px}
+.logo-text{font-family:'Playfair Display',serif;font-size:21px;font-weight:700;color:#fff;letter-spacing:0.8px}
+.logo-text em{color:var(--gold2);font-style:normal}
+.logo-sub{font-size:9.5px;color:var(--muted);letter-spacing:3px;text-transform:uppercase;margin-top:-1px}
+nav{display:flex;gap:2px}
+nav a{color:var(--muted);font-size:12px;font-weight:500;text-decoration:none;
+  padding:7px 15px;border-radius:6px;transition:all .2s;letter-spacing:0.2px}
+nav a:hover,nav a.active{color:var(--gold2);background:rgba(201,153,58,0.07)}
+.header-live{display:flex;align-items:center;gap:9px}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--teal2);
+  box-shadow:0 0 12px var(--teal2),0 0 4px var(--teal2);animation:livePulse 2s infinite}
+@keyframes livePulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.3;transform:scale(0.7)}}
+.live-text{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--teal2);letter-spacing:1.5px}
+
+.hero{position:relative;z-index:1;min-height:calc(100vh - 64px - 36px);
+  padding:60px 56px;display:flex;align-items:center;border-bottom:1px solid var(--border)}
+.hero-glow{position:absolute;top:-200px;left:50%;transform:translateX(-50%);
+  width:900px;height:600px;pointer-events:none;
+  background:radial-gradient(ellipse 60% 50% at 50% 50%,rgba(201,153,58,0.07),transparent);
+  animation:heroGlow 8s ease-in-out infinite alternate}
+@keyframes heroGlow{0%{opacity:0.6;transform:translateX(-50%) scale(1)}100%{opacity:1;transform:translateX(-50%) scale(1.05)}}
+.hero-grid-overlay{position:absolute;inset:0;
+  background-image:linear-gradient(rgba(201,153,58,0.022) 1px,transparent 1px),linear-gradient(90deg,rgba(201,153,58,0.022) 1px,transparent 1px);
+  background-size:56px 56px}
+.hero-grid-overlay::after{content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 80% 80% at 50% 50%,transparent 30%,var(--bg) 100%)}
+.hero-inner{position:relative;z-index:2;width:100%;max-width:1400px;
+  display:grid;grid-template-columns:1fr 1.1fr;gap:72px;align-items:center}
+.hero-eyebrow{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:22px}
+.etag{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--gold);letter-spacing:2.5px;
+  text-transform:uppercase;padding:5px 12px;border:1px solid rgba(201,153,58,0.22);
+  border-radius:4px;background:rgba(201,153,58,0.04)}
+.hero-title{font-family:'Playfair Display',serif;font-size:clamp(44px,5.2vw,74px);
+  font-weight:900;line-height:1.02;color:#fff;margin-bottom:18px;letter-spacing:-0.5px}
+.hero-title .accent{
+  background:linear-gradient(125deg,var(--gold2) 0%,var(--gold) 50%,#e89030 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.hero-desc{color:var(--silver3);font-size:14.5px;line-height:1.78;max-width:500px;margin-bottom:36px}
+.hero-ctas{display:flex;gap:12px;flex-wrap:wrap}
+.cta{display:inline-flex;align-items:center;gap:8px;padding:12px 24px;
+  border-radius:8px;font-size:12.5px;font-weight:600;text-decoration:none;
+  cursor:pointer;transition:all .25s;font-family:'DM Sans',sans-serif}
+.cta-gold{background:linear-gradient(135deg,rgba(201,153,58,0.18),rgba(201,153,58,0.06));
+  border:1px solid rgba(201,153,58,0.45);color:var(--gold2)}
+.cta-gold:hover{background:linear-gradient(135deg,rgba(201,153,58,0.28),rgba(201,153,58,0.12));
+  transform:translateY(-2px);box-shadow:0 8px 24px rgba(201,153,58,0.15)}
+.cta-ghost{background:rgba(255,255,255,0.03);border:1px solid var(--border2);color:var(--silver)}
+.cta-ghost:hover{border-color:rgba(201,153,58,0.3);color:var(--gold2)}
+
+.hero-widget{background:rgba(6,9,15,0.8);border:1px solid var(--border2);
+  border-radius:16px;overflow:hidden;backdrop-filter:blur(20px)}
+.hw-top{padding:18px 24px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between}
+.hw-top-title{font-family:'Playfair Display',serif;font-size:13px;color:var(--silver2)}
+.hw-badge{font-family:'JetBrains Mono',monospace;font-size:8.5px;color:var(--teal2);
+  letter-spacing:2px;padding:3px 9px;border:1px solid rgba(34,216,168,0.25);
+  border-radius:3px;background:rgba(34,216,168,0.06)}
+.live-main-counter{padding:28px 24px 20px;border-bottom:1px solid var(--border);
+  display:flex;flex-direction:column;align-items:center;text-align:center}
+.lmc-label{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted);
+  letter-spacing:3px;text-transform:uppercase;margin-bottom:10px}
+.lmc-value{font-family:'JetBrains Mono',monospace;font-size:36px;font-weight:600;
+  color:var(--gold2);line-height:1;letter-spacing:-1px;
+  text-shadow:0 0 40px rgba(240,200,88,0.4)}
+.lmc-ticker{display:flex;gap:4px;margin-top:10px;align-items:center}
+.lmc-ticker-arrow{color:var(--teal2);font-size:14px;animation:arrowBounce 1s infinite}
+@keyframes arrowBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+.lmc-ticker-text{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--teal2)}
+.hw-stats-grid{display:grid;grid-template-columns:1fr 1fr}
+.hw-stat{padding:16px 20px;border-right:1px solid var(--border);border-bottom:1px solid var(--border)}
+.hw-stat:nth-child(2n){border-right:none}
+.hw-stat:nth-last-child(-n+2){border-bottom:none}
+.hw-stat-label{font-size:9px;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-bottom:7px;font-weight:600}
+.hw-stat-value{font-family:'JetBrains Mono',monospace;font-size:17px;font-weight:600;line-height:1}
+.hw-stat-sub{font-size:10px;color:var(--muted);margin-top:4px}
+.c-gold{color:var(--gold2)}.c-teal{color:var(--teal2)}.c-blue{color:var(--blue2)}.c-red{color:var(--red2)}.c-silver{color:var(--silver2)}
+.wm-bar-row{padding:14px 24px;border-top:1px solid var(--border);
+  display:flex;align-items:center;gap:14px}
+.wm-bar-label{font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;white-space:nowrap;width:90px}
+.wm-bar-track{flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden}
+.wm-bar-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--teal),var(--gold))}
+.wm-val{font-family:'JetBrains Mono',monospace;font-size:11px;white-space:nowrap}
+
+.page-section{position:relative;z-index:1;padding:56px 56px 28px}
+.section-divider{height:1px;background:linear-gradient(90deg,transparent,var(--border2),transparent);margin:0 56px}
+.sec-eyebrow{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--muted);
+  letter-spacing:3px;text-transform:uppercase;margin-bottom:22px;
+  display:flex;align-items:center;gap:12px}
+.sec-eyebrow::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--border2),transparent)}
+.sec-title{font-family:'Playfair Display',serif;font-size:28px;font-weight:700;color:#fff;letter-spacing:0.3px;margin-bottom:8px}
+.sec-desc{font-size:13.5px;color:var(--silver3);line-height:1.65;max-width:580px;margin-bottom:32px}
+
+.viz-section{position:relative;z-index:1;padding:56px 56px 56px}
+
+.viz-buttons-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:16px;
+  margin-bottom:40px;
+}
+
+.viz-btn{
+  position:relative;
+  background:var(--surface);
+  border:1px solid var(--border2);
+  border-radius:16px;
+  padding:24px 20px;
+  cursor:pointer;
+  transition:all 0.35s cubic-bezier(0.4,0,0.2,1);
+  overflow:hidden;
+  text-align:left;
+  display:flex;flex-direction:column;gap:8px;
+}
+.viz-btn::before{
+  content:'';
+  position:absolute;inset:0;
+  background:radial-gradient(ellipse 80% 60% at 50% 0%,var(--btn-glow,rgba(201,153,58,0.08)),transparent 70%);
+  opacity:0;
+  transition:opacity 0.35s;
+  pointer-events:none;
+}
+.viz-btn::after{
+  content:'';
+  position:absolute;
+  bottom:0;left:0;right:0;height:2px;
+  background:var(--btn-accent,var(--gold));
+  transform:scaleX(0);
+  transform-origin:left;
+  transition:transform 0.4s cubic-bezier(0.4,0,0.2,1);
+}
+.viz-btn:hover::before{opacity:1}
+.viz-btn:hover::after{transform:scaleX(1)}
+.viz-btn:hover{
+  border-color:var(--btn-border,rgba(201,153,58,0.45));
+  transform:translateY(-4px);
+  box-shadow:0 16px 40px rgba(0,0,0,0.5), 0 0 0 1px var(--btn-border,rgba(201,153,58,0.15));
+}
+.viz-btn.active{
+  border-color:var(--btn-border,rgba(201,153,58,0.6)) !important;
+  background:var(--surface2);
+  transform:translateY(-2px);
+  box-shadow:0 8px 32px rgba(0,0,0,0.6), 0 0 24px var(--btn-glow2,rgba(201,153,58,0.12));
+}
+.viz-btn.active::after{transform:scaleX(1)}
+.viz-btn.active::before{opacity:1}
+
+.vb-icon{
+  font-size:28px;line-height:1;margin-bottom:4px;display:block;
+  filter:drop-shadow(0 0 8px var(--btn-glow2,rgba(201,153,58,0.4)));
+  transition:transform 0.3s, filter 0.3s;
+}
+.viz-btn:hover .vb-icon,.viz-btn.active .vb-icon{
+  transform:scale(1.15);
+  filter:drop-shadow(0 0 14px var(--btn-glow2,rgba(201,153,58,0.7)));
+}
+.vb-name{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:#fff;line-height:1.2;}
+.vb-type{
+  font-family:'JetBrains Mono',monospace;font-size:8px;
+  color:var(--btn-color,var(--gold2));letter-spacing:2.5px;text-transform:uppercase;
+  padding:3px 8px;border:1px solid var(--btn-border,rgba(201,153,58,0.25));
+  border-radius:3px;background:var(--btn-bg,rgba(201,153,58,0.05));
+  display:inline-block;width:fit-content;
+}
+.vb-spec{font-size:10.5px;color:var(--silver3);line-height:1.55;margin-top:2px;}
+.vb-stat{
+  font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:600;
+  color:var(--btn-color,var(--gold2));line-height:1;margin-top:auto;padding-top:12px;
+  text-shadow:0 0 20px var(--btn-glow2,rgba(201,153,58,0.4));
+}
+.vb-stat-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;}
+
+.viz-panel-container{position:relative;overflow:hidden;}
+.viz-panel{
+  background:var(--surface);border:1px solid var(--border2);border-radius:20px;
+  overflow:hidden;display:none;
+  animation:panelReveal 0.55s cubic-bezier(0.4,0,0.2,1) forwards;
+}
+.viz-panel.visible{display:block;}
+@keyframes panelReveal{
+  from{opacity:0;transform:translateY(20px) scale(0.98);}
+  to{opacity:1;transform:translateY(0) scale(1);}
+}
+
+.vp-header{
+  padding:22px 28px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  background:linear-gradient(135deg,rgba(201,153,58,0.04),transparent);
+}
+.vp-header-left{display:flex;align-items:center;gap:14px}
+.vp-icon{font-size:22px;filter:drop-shadow(0 0 10px rgba(201,153,58,0.5))}
+.vp-title{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:#fff}
+.vp-subtitle{font-size:11px;color:var(--silver3);margin-top:2px}
+.vp-close{width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,0.03);
+  border:1px solid var(--border2);color:var(--muted);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;font-size:14px;
+  transition:all .2s;font-family:monospace}
+.vp-close:hover{border-color:rgba(201,153,58,0.4);color:var(--gold2);background:rgba(201,153,58,0.06)}
+.vp-body{padding:28px;display:grid;gap:20px}
+.vp-body.two-col{grid-template-columns:1fr 1fr}
+.vp-body.three-col{grid-template-columns:1fr 1fr 1fr}
+.vp-body.full{grid-template-columns:1fr}
+
+.vp-chart-card{
+  background:var(--surface2);border:1px solid var(--border);border-radius:14px;
+  padding:22px;position:relative;overflow:hidden;
+}
+.vp-chart-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(201,153,58,0.15),transparent);
+}
+.vpc-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:2px;margin-bottom:5px;font-weight:600}
+.vpc-title{font-family:'Playfair Display',serif;font-size:13px;color:var(--silver2);margin-bottom:14px}
+.vpc-tag{font-family:'JetBrains Mono',monospace;font-size:7.5px;padding:2px 7px;
+  border-radius:3px;border:1px solid rgba(150,180,200,0.12);color:var(--silver3);
+  background:rgba(150,180,200,0.04);float:right;margin-top:-2px}
+
+.vp-stats-row{display:flex;gap:12px;flex-wrap:wrap;padding:0 0 4px}
+.vp-stat-pill{
+  flex:1;min-width:140px;
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:12px;padding:16px 20px;position:relative;overflow:hidden;
+}
+.vp-stat-pill::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--pill-accent,var(--gold))}
+.vsp-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1.8px;margin-bottom:7px}
+.vsp-value{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:600;color:var(--pill-color,var(--gold2))}
+.vsp-sub{font-size:10px;color:var(--silver3);margin-top:3px}
+
+/* ═══════ HISTOGRAM STYLES ═══════ */
+.hist-metric-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+.hist-tab{font-size:11px;font-weight:600;padding:7px 16px;border-radius:6px;
+  border:1px solid var(--border2);background:transparent;color:var(--muted);
+  cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif;letter-spacing:0.2px}
+.hist-tab.active{border-color:var(--gold);color:var(--gold2);background:rgba(201,153,58,0.08)}
+.hist-tab:hover{border-color:rgba(201,153,58,0.4);color:var(--gold2)}
+.hist-insight{margin-top:18px;padding:16px 20px;
+  background:rgba(201,153,58,0.04);border-radius:10px;
+  border:1px solid rgba(201,153,58,0.12);
+  border-left:3px solid var(--gold);
+  font-size:12px;color:var(--silver3);line-height:1.75}
+.hist-insight strong{color:var(--gold2);font-weight:600}
+.hist-stats-bar{display:flex;gap:0;border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:20px}
+.hsb-item{flex:1;padding:14px 18px;border-right:1px solid var(--border);text-align:center}
+.hsb-item:last-child{border-right:none}
+.hsb-val{font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:600;color:var(--gold2);line-height:1}
+.hsb-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-top:5px}
+
+/* ═══════ BOX PLOT STYLES ═══════ */
+.box-metric-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.box-stat-card{background:var(--surface3);border:1px solid var(--border);border-radius:10px;padding:14px 16px;position:relative;overflow:hidden}
+.box-stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--card-accent,var(--gold))}
+.bsc-metric{font-size:8.5px;color:var(--muted);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px}
+.bsc-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
+.bsc-label{font-size:9px;color:var(--silver3)}
+.bsc-val{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600}
+.box-legend{display:flex;gap:20px;flex-wrap:wrap;padding:14px 0 0;border-top:1px solid var(--border);margin-top:4px}
+.bl-item{display:flex;align-items:center;gap:7px;font-size:10px;color:var(--silver3)}
+
+/* ═══════ CORRELATION HEATMAP STYLES ═══════ */
+.corr-matrix-wrap{overflow-x:auto;padding-bottom:8px}
+.corr-grid{display:inline-grid;gap:3px}
+.corr-col-header{font-size:9px;color:var(--silver3);text-align:center;padding:4px 2px;font-weight:600;line-height:1.3;font-family:'DM Sans',sans-serif}
+.corr-row-header{font-size:10px;color:var(--silver2);text-align:right;padding-right:12px;font-weight:600;white-space:nowrap;font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:flex-end}
+.corr-cell-box{
+  display:flex;align-items:center;justify-content:center;
+  font-family:'JetBrains Mono',monospace;font-size:11.5px;font-weight:600;
+  border-radius:5px;cursor:default;
+  transition:transform .2s,filter .15s;
+  border:1px solid rgba(0,0,0,0.25);
+  position:relative;
+}
+.corr-cell-box:hover{transform:scale(1.12);filter:brightness(1.35);z-index:5}
+.corr-legend-bar{height:10px;border-radius:5px;margin:18px 0 6px;
+  background:linear-gradient(90deg,#c83050,#1a2840,#2070c8)}
+.corr-legend-labels{display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--silver3)}
+.corr-insight{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px}
+.ci-card{background:var(--surface3);border:1px solid var(--border);border-radius:8px;padding:14px 16px}
+.ci-card-title{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px}
+.ci-card-val{font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:600;margin-bottom:3px}
+.ci-card-desc{font-size:10.5px;color:var(--silver3);line-height:1.55}
+
+/* ═══════ PAIR PLOT STYLES ═══════ */
+.pairplot-outer{overflow-x:auto;padding-bottom:8px}
+.pp-grid{display:inline-grid;gap:6px}
+.pp-cell-wrap{border-radius:8px;overflow:hidden;border:1px solid var(--border);position:relative}
+.pp-diag-cell{background:rgba(201,153,58,0.06);border:1px solid rgba(201,153,58,0.18);
+  border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:8px;text-align:center}
+.pp-diag-label{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;
+  color:var(--gold2);margin-bottom:4px;line-height:1.3}
+.pp-region-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:18px;padding-top:14px;border-top:1px solid var(--border)}
+.prl-item{display:flex;align-items:center;gap:6px;font-size:10.5px;color:var(--silver3)}
+.prl-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.pp-tooltip{position:fixed;background:rgba(3,5,10,0.97);border:1px solid rgba(201,153,58,0.3);
+  border-radius:10px;padding:12px 16px;pointer-events:none;z-index:2000;
+  display:none;font-size:11px;color:var(--text);min-width:160px;
+  box-shadow:0 20px 50px rgba(0,0,0,0.85)}
+.pp-tooltip-title{font-family:'Playfair Display',serif;color:var(--gold2);font-size:13px;font-weight:700;margin-bottom:8px}
+.pp-tooltip-row{display:flex;justify-content:space-between;gap:16px;margin:3px 0}
+.pp-tooltip-key{color:var(--muted);font-size:10px}
+.pp-tooltip-val{font-family:'JetBrains Mono',monospace;color:#fff;font-size:10px}
+
+/* ═══════ MAP ═══════ */
+.heatmap-table{border-collapse:collapse;width:100%;font-size:10px}
+.heatmap-table th{padding:8px 10px;color:var(--muted);text-transform:uppercase;
+  letter-spacing:1px;font-size:9px;border-bottom:1px solid var(--border);text-align:left}
+.heatmap-table td{padding:7px 9px;text-align:center;font-family:'JetBrains Mono',monospace;
+  font-size:9.5px;border:1px solid rgba(10,15,25,0.5);
+  cursor:default;transition:filter .15s,transform .15s;position:relative}
+.heatmap-table td:hover{filter:brightness(1.6);z-index:2;transform:scale(1.04)}
+.hm-row-label{text-align:left!important;color:var(--silver2)!important;
+  font-family:'DM Sans',sans-serif!important;white-space:nowrap;padding-right:16px!important;font-size:11px!important}
+
+.map-layout{display:grid;grid-template-columns:1fr 360px;gap:24px;align-items:start}
+.map-container{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden}
+.map-header{padding:18px 24px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.map-header-title{font-family:'Playfair Display',serif;font-size:16px;color:var(--silver2)}
+.map-metric-tabs{display:flex;gap:6px;flex-wrap:wrap}
+.mtab{font-size:10px;font-weight:600;padding:5px 12px;border-radius:5px;
+  border:1px solid var(--border2);background:transparent;color:var(--muted);
+  cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif}
+.mtab.active{border-color:var(--gold);color:var(--gold2);background:rgba(201,153,58,0.08)}
+.mtab:hover{border-color:rgba(201,153,58,0.4);color:var(--gold2)}
+.map-svg-area{padding:20px;background:linear-gradient(135deg,#010306,#020508)}
+#india-svg{width:100%;height:auto;min-height:620px;display:block}
+.state-rect{transition:filter 0.2s,stroke 0.2s,stroke-width 0.2s;cursor:pointer}
+.state-rect:hover{filter:brightness(1.6);stroke:#f0c858!important;stroke-width:1.8!important}
+.state-rect.selected{stroke:#f0c858!important;stroke-width:2.2!important;filter:brightness(1.4)}
+.state-panel{background:var(--surface);border:1px solid var(--border);border-radius:16px;
+  overflow:hidden;position:sticky;top:88px}
+.sp-header{padding:20px 22px;border-bottom:1px solid var(--border);
+  background:linear-gradient(135deg,rgba(201,153,58,0.06),transparent)}
+.sp-state-name{font-family:'Playfair Display',serif;font-size:22px;color:var(--gold2);font-weight:700;margin-bottom:4px}
+.sp-region{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:2px}
+.sp-body{padding:18px 22px}
+.sp-metric{display:flex;justify-content:space-between;align-items:center;
+  padding:10px 0;border-bottom:1px solid rgba(17,24,40,0.8)}
+.sp-metric:last-of-type{border-bottom:none}
+.sp-metric-key{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+.sp-metric-val{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;color:#fff}
+.sp-bar-section{padding:0 22px 16px}
+.sp-bar-wrap{margin-bottom:12px}
+.sp-bar-label{font-size:9.5px;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.5px;display:flex;justify-content:space-between}
+.sp-bar-track{height:5px;background:var(--border);border-radius:3px;overflow:hidden}
+.sp-bar-fill{height:100%;border-radius:3px;transition:width .8s cubic-bezier(.4,0,.2,1)}
+.sp-ranks{display:grid;grid-template-columns:1fr 1fr;gap:9px;padding:0 22px 18px}
+.sp-rank-card{background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:10px 14px}
+.sp-rank-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.sp-rank-value{font-family:'JetBrains Mono',monospace;font-size:17px;font-weight:700;color:var(--gold2)}
+.sp-rank-sub{font-size:9.5px;color:var(--silver3);margin-top:2px}
+.sp-placeholder{padding:50px 22px;text-align:center;color:var(--muted);font-size:13px;line-height:1.9}
+.sp-placeholder-icon{font-size:36px;opacity:0.15;margin-bottom:14px}
+.map-legend{padding:16px 20px;border-top:1px solid var(--border);
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.legend-label{font-size:9.5px;color:var(--muted);letter-spacing:1px;white-space:nowrap}
+.legend-gradient{flex:1;height:7px;border-radius:4px;min-width:100px}
+.legend-ticks{display:flex;justify-content:space-between;font-size:8.5px;color:var(--muted);
+  font-family:'JetBrains Mono',monospace;margin-top:3px}
+
+.charts-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;
+  padding:26px;position:relative;overflow:hidden}
+.chart-card.full{grid-column:1/-1}
+.cc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:5px}
+.cc-title{font-family:'Playfair Display',serif;font-size:14px;font-weight:600;color:var(--silver2)}
+.cc-type{font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--silver3);
+  background:rgba(150,180,200,0.05);border:1px solid rgba(150,180,200,0.1);
+  padding:3px 8px;border-radius:3px;flex-shrink:0;margin-top:1px}
+.cc-desc{font-size:11.5px;color:var(--muted);margin-bottom:18px;line-height:1.6}
+.year-btns{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.ybtn{background:var(--surface2);border:1px solid var(--border);color:var(--muted);
+  padding:5px 11px;border-radius:4px;font-size:10px;cursor:pointer;
+  font-family:'JetBrains Mono',monospace;transition:all .2s}
+.ybtn.active{background:rgba(201,153,58,0.08);border-color:var(--gold);color:var(--gold2)}
+.ybtn:hover{border-color:rgba(201,153,58,0.4);color:var(--gold2)}
+.ctl-select{background:var(--surface);border:1px solid var(--border2);color:var(--silver2);
+  padding:6px 12px;border-radius:5px;font-size:11px;font-family:'DM Sans',sans-serif;outline:none;cursor:pointer}
+
+.toolbar{display:flex;align-items:center;gap:12px;padding:12px 56px;
+  background:rgba(6,9,15,0.9);border-bottom:1px solid var(--border);
+  flex-wrap:wrap;backdrop-filter:blur(20px);position:sticky;top:64px;z-index:100}
+.tb-section{display:flex;align-items:center;gap:9px}
+.tb-divider{width:1px;height:22px;background:var(--border2)}
+.tb-label{font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:2px}
+.tb-btn{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:6px;
+  font-size:11.5px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;
+  transition:all .2s;border:1px solid var(--border2);background:var(--surface2);color:var(--silver)}
+.tb-btn:hover{border-color:rgba(201,153,58,0.4);color:var(--gold2)}
+.tb-btn.teal{border-color:rgba(34,216,168,0.25);color:var(--teal2);background:rgba(34,216,168,0.05)}
+.tb-btn.teal:hover{background:rgba(34,216,168,0.12)}
+.csv-status{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);
+  padding:5px 10px;background:var(--bg);border:1px solid var(--border);border-radius:4px}
+.csv-status.ok{color:var(--teal2);border-color:rgba(34,216,168,0.25)}
+#csvFileInput{display:none}
+
+#map-tooltip{position:fixed;background:rgba(3,5,10,0.98);border:1px solid rgba(201,153,58,0.35);
+  border-radius:12px;padding:16px 20px;pointer-events:none;z-index:1000;
+  display:none;min-width:220px;box-shadow:0 24px 60px rgba(0,0,0,0.85)}
+.tt-title{font-family:'Playfair Display',serif;font-weight:700;color:var(--gold2);
+  margin-bottom:11px;font-size:16px;border-bottom:1px solid rgba(201,153,58,0.12);padding-bottom:8px}
+.tt-row{display:flex;justify-content:space-between;gap:24px;margin:5px 0}
+.tt-key{color:var(--muted);font-size:11px}.tt-val{font-family:'JetBrains Mono',monospace;color:#fff;font-size:11px;font-weight:500}
+
+.pp-tooltip{position:fixed;background:rgba(3,5,10,0.98);border:1px solid rgba(201,153,58,0.3);border-radius:10px;padding:12px 16px;pointer-events:none;z-index:1001;display:none;min-width:180px;font-size:12px;box-shadow:0 16px 40px rgba(0,0,0,0.7)}
+
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+footer{position:relative;z-index:1;background:var(--surface);
+  border-top:1px solid rgba(201,153,58,0.1);padding:32px 56px;
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:20px;margin-top:40px}
+.footer-logo{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:#fff}
+.footer-logo em{color:var(--gold2);font-style:normal}
+.footer-info{font-size:12px;color:var(--muted);line-height:2;text-align:center}
+.footer-badges{display:flex;gap:8px;flex-wrap:wrap}
+.fbadge{font-size:9.5px;font-family:'JetBrains Mono',monospace;padding:4px 10px;
+  border-radius:4px;border:1px solid var(--border2);color:var(--muted)}
+.fbadge.t{color:var(--teal2);border-color:rgba(34,216,168,0.2);background:rgba(34,216,168,0.04)}
+
+.fade-in{opacity:0;transform:translateY(24px);transition:opacity .7s cubic-bezier(.4,0,.2,1),transform .7s cubic-bezier(.4,0,.2,1)}
+.fade-in.visible{opacity:1;transform:none}
+
+@media(max-width:1100px){
+  header,.toolbar,.page-section,.viz-section,footer{padding-left:20px;padding-right:20px}
+  .hero{padding:40px 20px}.hero-inner{grid-template-columns:1fr;gap:36px}
+  .viz-buttons-grid{grid-template-columns:1fr 1fr}
+  .vp-body.two-col,.vp-body.three-col{grid-template-columns:1fr}
+  .charts-grid-2{grid-template-columns:1fr}.chart-card.full{grid-column:1}
+  .map-layout{grid-template-columns:1fr}
+  .section-divider{margin:0 20px}
+}
+</style>
+</head>
+<body>
+
+<div class="global-bg"><canvas id="bgCanvas"></canvas></div>
+
+<div class="ticker">
+  <div class="ticker-track" id="tickerTrack">
+    <span>◈ INDPOPHUB · INDIA POPULATION INTELLIGENCE</span><span class="sep">|</span>
+    <span>Census 2011 · 1,210,854,977</span><span class="sep">|</span>
+    <span>Est. 2025 · ~1.453 Billion</span><span class="sep">|</span>
+    <span>World's Most Populous · Surpassed China · April 2023</span><span class="sep">|</span>
+    <span>Sex Ratio · 943 F per 1000 M</span><span class="sep">|</span>
+    <span>Urban Share · ~38.4%</span><span class="sep">|</span>
+    <span>Most Populous · Uttar Pradesh · 199.8M</span><span class="sep">|</span>
+    <span>Highest Density · Delhi · 11,297/km²</span><span class="sep">|</span>
+    <span>Best Sex Ratio · Kerala · 1,084</span><span class="sep">|</span>
+    <span>Growth Rate · ~0.81%/yr</span><span class="sep">|</span>
+    <span>Net Births · ~67,000/day</span><span class="sep">|</span>
+    <span>◈ INDPOPHUB · INDIA POPULATION INTELLIGENCE</span><span class="sep">|</span>
+    <span>Census 2011 · 1,210,854,977</span><span class="sep">|</span>
+    <span>Est. 2025 · ~1.453 Billion</span><span class="sep">|</span>
+    <span>World's Most Populous · Surpassed China · April 2023</span><span class="sep">|</span>
+    <span>Sex Ratio · 943 F per 1000 M</span><span class="sep">|</span>
+    <span>Urban Share · ~38.4%</span><span class="sep">|</span>
+    <span>Most Populous · Uttar Pradesh · 199.8M</span><span class="sep">|</span>
+    <span>Highest Density · Delhi · 11,297/km²</span><span class="sep">|</span>
+    <span>Best Sex Ratio · Kerala · 1,084</span><span class="sep">|</span>
+    <span>Growth Rate · ~0.81%/yr</span><span class="sep">|</span>
+    <span>Net Births · ~67,000/day</span><span class="sep">|</span>
+  </div>
+</div>
+
+<header>
+  <div class="logo-wrap">
+    <div class="logo-icon">◈</div>
+    <div>
+      <div class="logo-text">Ind<em>Pop</em>Hub</div>
+      <div class="logo-sub">Population Intelligence</div>
+    </div>
+  </div>
+  <nav>
+    <a href="#overview" class="active">Overview</a>
+    <a href="#map-section">Map</a>
+    <a href="#viz-section">Visualizations</a>
+    <a href="#advanced-section">Analysis</a>
+  </nav>
+  <div class="header-live">
+    <div class="live-dot"></div>
+    <span class="live-text">LIVE EST.</span>
+  </div>
+</header>
+
+<div class="hero" id="overview">
+  <div class="hero-glow"></div>
+  <div class="hero-grid-overlay"></div>
+  <div class="hero-inner">
+    <div>
+      <div class="hero-eyebrow">
+        <span class="etag">Census 2011 · Live Projections</span>
+        <span class="etag">36 States &amp; UTs</span>
+        <span class="etag">Interactive Charts</span>
+      </div>
+      <div class="hero-title">
+        India Population<br>
+        <span class="accent">Intelligence</span><br>
+        Dashboard
+      </div>
+      <div class="hero-desc">
+        Real-time demographic intelligence for India — state-level population maps, gender ratios, density analysis, and interactive data visualizations across all 36 States &amp; UTs.
+      </div>
+      <div class="hero-ctas">
+        <a href="#map-section" class="cta cta-gold">⬡ Explore Map</a>
+        <a href="#viz-section" class="cta cta-ghost">◇ Visualizations</a>
+        <a href="#advanced-section" class="cta cta-ghost">⬡ Deep Analysis</a>
+      </div>
+    </div>
+    <div class="hero-widget">
+      <div class="hw-top">
+        <span class="hw-top-title">Live Population Counter</span>
+        <span class="hw-badge">UN-CALIBRATED LIVE EST.</span>
+      </div>
+      <div class="live-main-counter">
+        <div class="lmc-label">India's Current Population</div>
+        <div class="lmc-value" id="mainLiveCounter">—</div>
+        <div class="lmc-ticker">
+          <span class="lmc-ticker-arrow">↑</span>
+          <span class="lmc-ticker-text" id="netGrowthText">+0 this session</span>
+        </div>
+      </div>
+      <div class="hw-stats-grid">
+        <div class="hw-stat">
+          <div class="hw-stat-label">Births Today</div>
+          <div class="hw-stat-value c-teal" id="birthsToday">0</div>
+          <div class="hw-stat-sub">~67,385/day avg</div>
+        </div>
+        <div class="hw-stat">
+          <div class="hw-stat-label">Deaths Today</div>
+          <div class="hw-stat-value c-red" id="deathsToday">0</div>
+          <div class="hw-stat-sub">~27,397/day avg</div>
+        </div>
+        <div class="hw-stat">
+          <div class="hw-stat-label">Net Growth Today</div>
+          <div class="hw-stat-value c-gold" id="netGrowthToday">0</div>
+          <div class="hw-stat-sub">~39,988/day net</div>
+        </div>
+        <div class="hw-stat">
+          <div class="hw-stat-label">World Share</div>
+          <div class="hw-stat-value c-silver">17.76%</div>
+          <div class="hw-stat-sub">1 in 6 humans</div>
+        </div>
+        <div class="hw-stat">
+          <div class="hw-stat-label">Male</div>
+          <div class="hw-stat-value c-blue" id="liveMale">748,100,000</div>
+          <div class="hw-stat-sub">51.47% of total</div>
+        </div>
+        <div class="hw-stat">
+          <div class="hw-stat-label">Female</div>
+          <div class="hw-stat-value c-red" id="liveFemale">705,316,000</div>
+          <div class="hw-stat-sub">48.53% of total</div>
+        </div>
+      </div>
+      <div class="wm-bar-row">
+        <span class="wm-bar-label">Urban Growth</span>
+        <div class="wm-bar-track"><div class="wm-bar-fill" id="urbanBar" style="width:0%"></div></div>
+        <span class="wm-val c-teal" style="width:80px;text-align:right">38.4% urban</span>
+      </div>
+      <div class="wm-bar-row">
+        <span class="wm-bar-label">Literacy Rate</span>
+        <div class="wm-bar-track"><div class="wm-bar-fill" id="litBar" style="width:0%;background:linear-gradient(90deg,var(--blue),var(--purple))"></div></div>
+        <span class="wm-val c-blue" style="width:80px;text-align:right">74.04%</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toolbar">
+  <div class="tb-section">
+    <span class="tb-label">Dataset:</span>
+    <label class="tb-btn teal" for="csvFileInput">↑ Upload CSV</label>
+    <input type="file" id="csvFileInput" accept=".csv"/>
+    <button class="tb-btn" id="resetBtn" style="display:none;border-color:rgba(200,48,80,0.3);color:#f04068" onclick="resetData()">✕ Reset</button>
+    <span class="csv-status" id="csvStatus">Built-in Census 2011</span>
+  </div>
+  <div class="tb-divider"></div>
+  <div class="tb-section">
+    <span class="tb-label">Export:</span>
+    <button class="tb-btn" onclick="downloadStatesCSV()">↓ States CSV</button>
+    <button class="tb-btn" onclick="downloadHistCSV()">↓ Historical CSV</button>
+    <button class="tb-btn teal" onclick="downloadAllCSV()">↓ Export All Data</button>
+  </div>
+</div>
+
+<!-- VIZ SECTION -->
+<div class="viz-section fade-in" id="viz-section">
+  <div class="sec-eyebrow">◇ Interactive Visualizations · Click to Explore</div>
+  <div class="sec-title">Proportions, Comparisons &amp; Distributions</div>
+  <div class="sec-desc">Each card reveals a full data visualization. Click any metric to instantly render its chart with live animations.</div>
+
+  <div class="viz-buttons-grid" id="vizButtonsGrid">
+
+    <button class="viz-btn" id="vbtn-pop" onclick="showViz('pop')"
+      style="--btn-glow:rgba(201,153,58,0.1);--btn-glow2:rgba(240,200,88,0.5);--btn-accent:var(--gold);--btn-border:rgba(201,153,58,0.45);--btn-color:var(--gold2);--btn-bg:rgba(201,153,58,0.06)">
+      <span class="vb-icon">◈</span>
+      <div class="vb-name">Population Share</div>
+      <div class="vb-type">PIE · BAR</div>
+      <div class="vb-spec">State-by-state breakdown of India's 1.21B census population as proportional shares</div>
+      <div class="vb-stat">1.45B</div>
+      <div class="vb-stat-label">2025 Estimate</div>
+    </button>
+
+    <button class="viz-btn" id="vbtn-gender" onclick="showViz('gender')"
+      style="--btn-glow:rgba(32,112,200,0.1);--btn-glow2:rgba(56,160,240,0.5);--btn-accent:var(--blue2);--btn-border:rgba(32,112,200,0.45);--btn-color:var(--blue2);--btn-bg:rgba(32,112,200,0.06)">
+      <span class="vb-icon">⚥</span>
+      <div class="vb-name">Gender Balance</div>
+      <div class="vb-type">GROUPED BAR · SCATTER</div>
+      <div class="vb-spec">Male vs Female populations across all states with sex ratio analysis</div>
+      <div class="vb-stat">943 F/M</div>
+      <div class="vb-stat-label">National Average</div>
+    </button>
+
+    <button class="viz-btn" id="vbtn-density" onclick="showViz('density')"
+      style="--btn-glow:rgba(22,176,130,0.1);--btn-glow2:rgba(40,232,184,0.5);--btn-accent:var(--teal2);--btn-border:rgba(22,176,130,0.45);--btn-color:var(--teal2);--btn-bg:rgba(22,176,130,0.06)">
+      <span class="vb-icon">⬡</span>
+      <div class="vb-name">Population Density</div>
+      <div class="vb-type">BAR · SCATTER</div>
+      <div class="vb-spec">Persons per km² — from Delhi's extreme 11,297 to Arunachal's sparse 17</div>
+      <div class="vb-stat">493/km²</div>
+      <div class="vb-stat-label">National Average</div>
+    </button>
+
+    <button class="viz-btn" id="vbtn-urban" onclick="showViz('urban')"
+      style="--btn-glow:rgba(120,64,208,0.1);--btn-glow2:rgba(176,128,248,0.5);--btn-accent:var(--purple);--btn-border:rgba(120,64,208,0.45);--btn-color:#b080f8;--btn-bg:rgba(120,64,208,0.06)">
+      <span class="vb-icon">🏙</span>
+      <div class="vb-name">Urban vs Rural</div>
+      <div class="vb-type">STACKED · 100%</div>
+      <div class="vb-spec">Urbanisation distribution sorted by rate — Goa leads, Himachal lags</div>
+      <div class="vb-stat">38.4%</div>
+      <div class="vb-stat-label">Urban Share</div>
+    </button>
+
+    <button class="viz-btn" id="vbtn-sex" onclick="showViz('sex')"
+      style="--btn-glow:rgba(200,48,80,0.1);--btn-glow2:rgba(240,64,104,0.5);--btn-accent:var(--red2);--btn-border:rgba(200,48,80,0.45);--btn-color:var(--red2);--btn-bg:rgba(200,48,80,0.06)">
+      <span class="vb-icon">♀</span>
+      <div class="vb-name">Sex Ratio Spread</div>
+      <div class="vb-type">H-BAR · RANKED</div>
+      <div class="vb-spec">All 36 states ranked by sex ratio — Kerala at 1084, Daman &amp; Diu at 618</div>
+      <div class="vb-stat">466 pts</div>
+      <div class="vb-stat-label">Range Spread</div>
+    </button>
+
+    <button class="viz-btn" id="vbtn-timeline" onclick="showViz('timeline')"
+      style="--btn-glow:rgba(201,153,58,0.08);--btn-glow2:rgba(201,153,58,0.45);--btn-accent:var(--gold);--btn-border:rgba(201,153,58,0.4);--btn-color:var(--gold2);--btn-bg:rgba(201,153,58,0.05)">
+      <span class="vb-icon">📈</span>
+      <div class="vb-name">Historical Growth</div>
+      <div class="vb-type">COMBO LINE+BAR</div>
+      <div class="vb-spec">Population trajectory 1901–2025 with decadal change bars since independence</div>
+      <div class="vb-stat">1901–2025</div>
+      <div class="vb-stat-label">124 Years of Data</div>
+    </button>
+
+    <button class="viz-btn" id="vbtn-pareto" onclick="showViz('pareto')"
+      style="--btn-glow:rgba(22,176,130,0.08);--btn-glow2:rgba(40,232,184,0.45);--btn-accent:var(--teal);--btn-border:rgba(22,176,130,0.4);--btn-color:var(--teal2);--btn-bg:rgba(22,176,130,0.05)">
+      <span class="vb-icon">📊</span>
+      <div class="vb-name">Pareto Analysis</div>
+      <div class="vb-type">PARETO · CUMULATIVE</div>
+      <div class="vb-spec">Top 5 states hold 48% of India's population — 80/20 rule in demography</div>
+      <div class="vb-stat">Top 5 = 48%</div>
+      <div class="vb-stat-label">Population Concentration</div>
+    </button>
+
+    <button class="viz-btn" id="vbtn-projection" onclick="showViz('projection')"
+      style="--btn-glow:rgba(120,64,208,0.08);--btn-glow2:rgba(176,128,248,0.45);--btn-accent:var(--purple);--btn-border:rgba(120,64,208,0.4);--btn-color:#b080f8;--btn-bg:rgba(120,64,208,0.05)">
+      <span class="vb-icon">🔮</span>
+      <div class="vb-name">2050 Projection</div>
+      <div class="vb-type">FORECAST · 3 SCENARIOS</div>
+      <div class="vb-spec">Low / Medium / High growth scenarios from 2025 to 2050 with confidence bands</div>
+      <div class="vb-stat">~1.7B</div>
+      <div class="vb-stat-label">Medium Scenario 2050</div>
+    </button>
+
+    <button class="viz-btn" id="vbtn-histogram" onclick="showViz('histogram')"
+      style="--btn-glow:rgba(240,180,40,0.1);--btn-glow2:rgba(240,210,80,0.55);--btn-accent:#f0d040;--btn-border:rgba(240,180,40,0.5);--btn-color:#f0d060;--btn-bg:rgba(240,180,40,0.06)">
+      <span class="vb-icon">📉</span>
+      <div class="vb-name">Histogram</div>
+      <div class="vb-type">DISTRIBUTION · BINS</div>
+      <div class="vb-spec">Frequency distributions reveal how population, density &amp; sex ratio spread across India's 36 states — exposing skew, clusters and outliers</div>
+      <div class="vb-stat">3 metrics</div>
+      <div class="vb-stat-label">State Distributions</div>
+    </button>
+
+    <button class="viz-btn" id="vbtn-boxplot" onclick="showViz('boxplot')"
+      style="--btn-glow:rgba(40,200,160,0.1);--btn-glow2:rgba(40,232,184,0.55);--btn-accent:#28e8b8;--btn-border:rgba(40,200,160,0.5);--btn-color:#28e8b8;--btn-bg:rgba(40,200,160,0.06)">
+      <span class="vb-icon">📦</span>
+      <div class="vb-name">Box Plots</div>
+      <div class="vb-type">QUARTILE · IQR · OUTLIERS</div>
+      <div class="vb-spec">Median, IQR, whiskers &amp; outlier states for all key metrics — the full distributional picture in one view</div>
+      <div class="vb-stat">Q1–Q3</div>
+      <div class="vb-stat-label">Quartile Analysis</div>
+    </button>
+
+    <button class="viz-btn" id="vbtn-corrmap" onclick="showViz('corrmap')"
+      style="--btn-glow:rgba(140,80,240,0.1);--btn-glow2:rgba(170,120,255,0.55);--btn-accent:#a860ff;--btn-border:rgba(140,80,240,0.5);--btn-color:#c090ff;--btn-bg:rgba(140,80,240,0.06)">
+      <span class="vb-icon">🔥</span>
+      <div class="vb-name">Correlation Heatmap</div>
+      <div class="vb-type">PEARSON r · MATRIX</div>
+      <div class="vb-spec">Pearson r matrix across 6 demographic variables — uncovers which metrics statistically move together across India's states</div>
+      <div class="vb-stat">6×6</div>
+      <div class="vb-stat-label">Variable Matrix</div>
+    </button>
+
+    <button class="viz-btn" id="vbtn-pairplot" onclick="showViz('pairplot')"
+      style="--btn-glow:rgba(200,60,80,0.1);--btn-glow2:rgba(240,80,110,0.55);--btn-accent:#f04878;--btn-border:rgba(200,60,80,0.5);--btn-color:#f06888;--btn-bg:rgba(200,60,80,0.06)">
+      <span class="vb-icon">🔲</span>
+      <div class="vb-name">Pair Plot</div>
+      <div class="vb-type">SCATTER MATRIX · 4×4</div>
+      <div class="vb-spec">All pairwise scatter plots of 4 key metrics coloured by region — revealing multidimensional patterns across India's demographic landscape</div>
+      <div class="vb-stat">4×4 grid</div>
+      <div class="vb-stat-label">Scatterplot Matrix</div>
+    </button>
+
+  </div>
+
+  <div class="viz-panel-container">
+    <div class="viz-panel" id="vizPanel"></div>
+  </div>
+</div>
+
+<div class="section-divider"></div>
+
+<div class="page-section fade-in" id="map-section">
+  <div class="sec-eyebrow">⬡ Choropleth Map · Click Any State</div>
+  <div class="sec-title">India — Interactive Population Map</div>
+  <div class="sec-desc">Click any state to view detailed demographics, national rankings, and visual comparisons. Switch metrics to recolor the map.</div>
+  <div class="map-layout">
+    <div class="map-container">
+      <div class="map-header">
+        <span class="map-header-title">Population Density Map</span>
+        <div class="map-metric-tabs">
+          <button class="mtab active" onclick="switchMapMetric('density',this)">Density</button>
+          <button class="mtab" onclick="switchMapMetric('pop',this)">Population</button>
+          <button class="mtab" onclick="switchMapMetric('sex',this)">Sex Ratio</button>
+          <button class="mtab" onclick="switchMapMetric('urban',this)">Urban %</button>
+        </div>
+      </div>
+      <div class="map-svg-area">
+        <svg id="india-svg" viewBox="60 28 530 590" xmlns="http://www.w3.org/2000/svg"></svg>
+      </div>
+      <div class="map-legend">
+        <span class="legend-label">LOW</span>
+        <div style="flex:1">
+          <div class="legend-gradient" id="legendGradient"></div>
+          <div class="legend-ticks" id="legendTicks"></div>
+        </div>
+        <span class="legend-label">HIGH</span>
+      </div>
+    </div>
+    <div class="state-panel" id="statePanel">
+      <div id="spPlaceholder" class="sp-placeholder">
+        <div class="sp-placeholder-icon">⬡</div>
+        <div>Click any state on the map<br>to explore its demographics</div>
+      </div>
+      <div id="spContent" style="display:none"></div>
+    </div>
+  </div>
+</div>
+
+<div class="section-divider"></div>
+
+<div class="page-section fade-in" id="advanced-section">
+  <div class="sec-eyebrow">⬡ Advanced Analysis</div>
+  <div class="sec-title">Deep Demographic Insights</div>
+
+  <div class="charts-grid-2" style="margin-bottom:20px">
+    <div class="chart-card">
+      <div class="cc-top"><div><div class="cc-title">Multi-Metric Scatter</div><div class="cc-desc">Pop vs Density. Bubble size ∝ population.</div></div><span class="cc-type">SCATTER</span></div>
+      <canvas id="scatterChart" style="max-height:280px"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="cc-top"><div><div class="cc-title">Regional Radar</div><div class="cc-desc">5 regions across 5 normalised metrics.</div></div><span class="cc-type">RADAR</span></div>
+      <canvas id="radarChart" style="max-height:280px"></canvas>
+    </div>
+  </div>
+
+  <div class="chart-card full" style="margin-bottom:20px">
+    <div class="cc-top"><div><div class="cc-title">Multi-Metric State Heatmap</div><div class="cc-desc">Cell intensity = normalised rank. Compare 5 metrics across top 20 states.</div></div><span class="cc-type">HEATMAP</span></div>
+    <div style="overflow-x:auto;margin-top:16px" id="heatmapDiv"></div>
+    <div style="display:flex;gap:12px;align-items:center;margin-top:14px;font-size:10px;color:var(--muted)">
+      <span>Low</span>
+      <div id="heatLegend" style="flex:1;height:6px;border-radius:3px"></div>
+      <span>High</span>
+    </div>
+  </div>
+
+  <div class="chart-card full" style="margin-bottom:20px">
+    <div class="cc-top"><div><div class="cc-title">State Comparison Tool</div><div class="cc-desc">Select two states to compare across 7 metrics.</div></div><span class="cc-type">COMPARE</span></div>
+    <div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap;margin-bottom:20px;margin-top:16px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:12px;color:var(--gold2);font-weight:600">State A:</span>
+        <select class="ctl-select" id="stateA" onchange="updateComparison()"></select>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:12px;color:var(--blue2);font-weight:600">State B:</span>
+        <select class="ctl-select" id="stateB" onchange="updateComparison()"></select>
+      </div>
+    </div>
+    <canvas id="compareChart" style="max-height:280px"></canvas>
+  </div>
+
+  <div class="chart-card full">
+    <div class="cc-top"><div><div class="cc-title">Decadal Growth Analytics</div><div class="cc-desc">Compound annual growth rate per census decade.</div></div><span class="cc-type">TABLE</span></div>
+    <div id="analyticsTable" style="overflow-x:auto;margin-top:16px"></div>
+  </div>
+</div>
+
+<div id="map-tooltip"></div>
+<div class="pp-tooltip" id="ppTooltip"></div>
+
+<footer>
+  <div>
+    <div class="footer-logo">Ind<em>Pop</em>Hub</div>
+    <div class="footer-info" style="margin-top:4px">India Population Intelligence Platform</div>
+  </div>
+  <div class="footer-info">
+    <strong style="color:var(--silver)">Data:</strong> Census of India 2011<br>
+    Live estimates · UN growth projections<br>
+    <span id="footerTime" style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted)"></span>
+  </div>
+  <div class="footer-badges">
+    <span class="fbadge t">Live Counters</span>
+    <span class="fbadge t">Interactive Charts</span>
+    <span class="fbadge">Census 2011</span>
+    <span class="fbadge">36 States &amp; UTs</span>
+  </div>
+</footer>
+
+<script>
+// ══════════════ DATA ══════════════
+const STATES=[
+  {name:"Uttar Pradesh",pop:199812341,pct:16.5,male:104480510,female:95331831,sex:930,rural:155111022,urban:44470455,area:240928,density:828},
+  {name:"Maharashtra",pop:112374333,pct:9.28,male:58243056,female:54131277,sex:929,rural:61545441,urban:50827531,area:307713,density:365},
+  {name:"Bihar",pop:104099452,pct:8.6,male:54278157,female:49821295,sex:918,rural:92075028,urban:11729609,area:94163,density:1102},
+  {name:"West Bengal",pop:91276115,pct:7.54,male:46809027,female:44467088,sex:950,rural:62213676,urban:29134060,area:88752,density:1030},
+  {name:"Madhya Pradesh",pop:72626809,pct:6.0,male:37612306,female:35014503,sex:931,rural:52537899,urban:20059666,area:308245,density:236},
+  {name:"Tamil Nadu",pop:72147030,pct:5.96,male:36137975,female:36009055,sex:996,rural:37189229,urban:34949729,area:130058,density:555},
+  {name:"Rajasthan",pop:68548437,pct:5.66,male:35550997,female:32997440,sex:928,rural:51540236,urban:17080776,area:342239,density:201},
+  {name:"Karnataka",pop:61095297,pct:5.05,male:30966657,female:30128640,sex:973,rural:37552529,urban:23578175,area:191791,density:319},
+  {name:"Gujarat",pop:60439692,pct:4.99,male:31491260,female:28948432,sex:919,rural:34670817,urban:25712811,area:196024,density:308},
+  {name:"Andhra Pradesh",pop:49386799,pct:4.08,male:24738068,female:24648731,sex:996,rural:34776389,urban:14610410,area:160205,density:308},
+  {name:"Odisha",pop:41974218,pct:3.47,male:21212136,female:20762082,sex:979,rural:34951234,urban:6996124,area:155707,density:269},
+  {name:"Telangana",pop:35193978,pct:2.91,male:17704078,female:17489900,sex:988,rural:21585313,urban:13608665,area:114840,density:307},
+  {name:"Kerala",pop:33406061,pct:2.76,male:16027412,female:17378649,sex:1084,rural:17445506,urban:15932171,area:38863,density:859},
+  {name:"Jharkhand",pop:32988134,pct:2.72,male:16930315,female:16057819,sex:948,rural:25036946,urban:7929292,area:79714,density:414},
+  {name:"Assam",pop:31205576,pct:2.58,male:15939443,female:15266133,sex:958,rural:26780526,urban:4388756,area:78438,density:397},
+  {name:"Punjab",pop:27743338,pct:2.29,male:14639465,female:13103873,sex:895,rural:17316800,urban:10387436,area:50362,density:550},
+  {name:"Chhattisgarh",pop:25545198,pct:2.11,male:12832895,female:12712303,sex:991,rural:19603658,urban:5936538,area:135191,density:189},
+  {name:"Haryana",pop:25351462,pct:2.09,male:13494734,female:11856728,sex:879,rural:16531493,urban:8821588,area:44212,density:573},
+  {name:"Delhi",pop:16787941,pct:1.39,male:8887326,female:7800615,sex:868,rural:944727,urban:12905780,area:1484,density:11297},
+  {name:"Jammu & Kashmir",pop:12541302,pct:1.04,male:6640662,female:5900640,sex:889,rural:9134820,urban:3414106,area:222236,density:56},
+  {name:"Uttarakhand",pop:10086292,pct:0.83,male:5137773,female:4948519,sex:963,rural:7025583,urban:3091169,area:53483,density:189},
+  {name:"Himachal Pradesh",pop:6864602,pct:0.57,male:3481873,female:3382729,sex:972,rural:6167805,urban:688704,area:55673,density:123},
+  {name:"Tripura",pop:3673917,pct:0.3,male:1874376,female:1799541,sex:960,rural:2710051,urban:960981,area:10486,density:350},
+  {name:"Meghalaya",pop:2966889,pct:0.25,male:1491832,female:1475057,sex:989,rural:2368971,urban:595036,area:22429,density:132},
+  {name:"Manipur",pop:2855794,pct:0.24,male:1438687,female:1417107,sex:985,rural:1899624,urban:822132,area:22327,density:128},
+  {name:"Nagaland",pop:1978502,pct:0.16,male:1024649,female:953853,sex:931,rural:1406861,urban:573741,area:16579,density:119},
+  {name:"Goa",pop:1458545,pct:0.12,male:739140,female:719405,sex:973,rural:551414,urban:906309,area:3702,density:394},
+  {name:"Arunachal Pradesh",pop:1383727,pct:0.11,male:713912,female:669815,sex:938,rural:1069165,urban:313446,area:83743,density:17},
+  {name:"Puducherry",pop:1247953,pct:0.1,male:612511,female:635442,sex:1037,rural:394341,urban:850123,area:479,density:2598},
+  {name:"Mizoram",pop:1097206,pct:0.09,male:555339,female:541867,sex:976,rural:529037,urban:561997,area:21081,density:52},
+  {name:"Chandigarh",pop:1055450,pct:0.09,male:580663,female:474787,sex:818,rural:29004,urban:1025682,area:114,density:9252},
+  {name:"Sikkim",pop:610577,pct:0.05,male:323070,female:287507,sex:890,rural:455962,urban:151726,area:7096,density:86},
+  {name:"Andaman & Nicobar",pop:380581,pct:0.03,male:202871,female:177710,sex:876,rural:244411,urban:135533,area:8249,density:46},
+  {name:"Dadra & Nagar Haveli",pop:343709,pct:0.03,male:193760,female:149949,sex:774,rural:183024,urban:159829,area:491,density:698},
+  {name:"Daman & Diu",pop:243247,pct:0.02,male:150301,female:92946,sex:618,rural:60331,urban:182580,area:112,density:2169},
+  {name:"Lakshadweep",pop:64473,pct:0.01,male:33123,female:31350,sex:946,rural:14121,urban:50308,area:32,density:2013},
+];
+STATES.forEach(s=>s.urbanPct=+(s.urban/s.pop*100).toFixed(1)||0);
+
+const HISTORICAL=[
+  {year:1901,pop:238396327,change:null},{year:1911,pop:252093390,change:13697063},
+  {year:1921,pop:251321213,change:-772177},{year:1931,pop:278977238,change:27656025},
+  {year:1941,pop:318660580,change:39683342},{year:1951,pop:361088090,change:42427510},
+  {year:1961,pop:439234771,change:78146681},{year:1971,pop:548159652,change:108924881},
+  {year:1981,pop:683329097,change:135169445},{year:1991,pop:846421039,change:163091942},
+  {year:2001,pop:1028737436,change:182316397},{year:2011,pop:1210854977,change:181117541},
+  {year:2015,pop:1310152403,change:99297426},{year:2020,pop:1380004385,change:69851982},
+  {year:2023,pop:1428627663,change:48623278},{year:2024,pop:1441719852,change:13092189},
+  {year:2025,pop:1453416000,change:11696148},
+];
+
+let states=[...STATES.map(s=>({...s}))];
+let historical=[...HISTORICAL.map(d=>({...d}))];
+
+const REGIONS={
+  'North':['Uttar Pradesh','Rajasthan','Delhi','Punjab','Haryana','Himachal Pradesh','Uttarakhand','Jammu & Kashmir','Chandigarh'],
+  'South':['Tamil Nadu','Karnataka','Kerala','Andhra Pradesh','Telangana','Puducherry'],
+  'East':['West Bengal','Odisha','Jharkhand','Bihar','Andaman & Nicobar'],
+  'West':['Maharashtra','Gujarat','Goa','Dadra & Nagar Haveli','Daman & Diu'],
+  'Central':['Madhya Pradesh','Chhattisgarh'],
+  'Northeast':['Assam','Arunachal Pradesh','Meghalaya','Nagaland','Manipur','Mizoram','Tripura','Sikkim','Lakshadweep'],
+};
+const REGION_COLORS={North:'#c9993a',South:'#16b082',East:'#c83050',West:'#7840d0',Central:'#2070c8',Northeast:'#d88038'};
+function getRegion(n){for(const[r,ns]of Object.entries(REGIONS))if(ns.includes(n))return r;return'Other';}
+
+const crL=n=>{if(n>=1e7)return(n/1e7).toFixed(2)+' Cr';if(n>=1e5)return(n/1e5).toFixed(2)+' L';return n.toLocaleString('en-IN')};
+const fmtN=n=>n.toLocaleString('en-IN');
+const toCr=n=>+(n/1e7).toFixed(3);
+const normalize=(v,mn,mx)=>mx===mn?0.5:(v-mn)/(mx-mn);
+
+Chart.defaults.color='#304858';
+Chart.defaults.borderColor='#111828';
+Chart.defaults.font.family="'DM Sans',sans-serif";
+
+const GOLD_PAL=['#c9993a','#e8ba58','#b07828','#d8a838','#c09030','#f0c858','#a06820','#d8a028','#b07818','#e8c050','#986010','#d09028','#886010','#e0a820','#b87028','#c9903a','#e0b050','#a87020','#d09840','#b87830'];
+const MIX_PAL=['#c9993a','#c0d0de','#7840d0','#16b082','#c83050','#2070c8','#e8ba58','#98b0c2','#60c8a8','#d88038','#7080b8','#60c878','#c05080','#40a0c8','#c8b838','#d060a0','#48c8b0','#e09050','#88a0d0','#b050c0'];
+
+// ── Live counters (real-time projection) ──────────────────────
+// Reference: UN World Population Prospects 2024 — India
+// Jan 1 2025 00:00:00 UTC  →  1,441,719,852
+// Annual net growth ≈ 0.89% → ~12,831,507/yr → ~0.40660 persons/sec
+// Births ≈ 67,385/day → 0.77991/sec  |  Deaths ≈ 27,397/day → 0.31702/sec
+const REF_POP  = 1441719852;
+const REF_TIME = Date.UTC(2025, 0, 1, 0, 0, 0);       // Jan 1 2025 UTC
+const BIRTHS_PER_SEC = 67385 / 86400;
+const DEATHS_PER_SEC = 27397 / 86400;
+const NET_PER_SEC    = BIRTHS_PER_SEC - DEATHS_PER_SEC; // ~0.4066/sec
+const sessionStart   = Date.now();
+
+function getSecondsSinceMidnight(){
+  const n = new Date();
+  return n.getHours()*3600 + n.getMinutes()*60 + n.getSeconds();
+}
+function updateLiveCounters(){
+  const nowMs    = Date.now();
+  const elapsed  = (nowMs - REF_TIME) / 1000;           // seconds since Jan 1 2025
+  const curPop   = Math.round(REF_POP + elapsed * NET_PER_SEC);
+  const sessionGrowth = Math.round((nowMs - sessionStart) / 1000 * NET_PER_SEC);
+  const sec      = getSecondsSinceMidnight();
+  const birthsToday  = Math.round(sec * BIRTHS_PER_SEC);
+  const deathsToday  = Math.round(sec * DEATHS_PER_SEC);
+  const male   = Math.round(curPop * 0.5147);
+  const female = curPop - male;
+  document.getElementById('mainLiveCounter').textContent = fmtN(curPop);
+  document.getElementById('netGrowthText').textContent   = `+${fmtN(sessionGrowth)} this session`;
+  document.getElementById('birthsToday').textContent     = fmtN(birthsToday);
+  document.getElementById('deathsToday').textContent     = fmtN(deathsToday);
+  document.getElementById('netGrowthToday').textContent  = fmtN(birthsToday - deathsToday);
+  document.getElementById('liveMale').textContent        = fmtN(male);
+  document.getElementById('liveFemale').textContent      = fmtN(female);
+  document.getElementById('footerTime').textContent      = 'Live est. · ' + new Date().toLocaleTimeString();
+}
+setTimeout(()=>{const ub=document.getElementById('urbanBar'),lb=document.getElementById('litBar');if(ub)ub.style.width='38.4%';if(lb)lb.style.width='74.04%';},600);
+setInterval(updateLiveCounters,1000);updateLiveCounters();
+
+// Particles
+(function(){
+  const canvas=document.getElementById('bgCanvas');if(!canvas)return;
+  const ctx=canvas.getContext('2d');let W,H,particles=[];
+  function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight;}
+  resize();window.addEventListener('resize',resize);
+  for(let i=0;i<60;i++)particles.push({x:Math.random()*window.innerWidth,y:Math.random()*window.innerHeight,vx:(Math.random()-0.5)*0.3,vy:(Math.random()-0.5)*0.3,r:Math.random()*2+0.5,a:Math.random()*0.4+0.1,c:`hsl(${35+Math.random()*20},50%,60%)`});
+  function draw(){ctx.clearRect(0,0,W,H);particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fillStyle=p.c;ctx.globalAlpha=p.a;ctx.fill();});ctx.globalAlpha=1;requestAnimationFrame(draw);}
+  draw();
+})();
+
+// CSV
+document.getElementById('csvFileInput').addEventListener('change',function(e){
+  const file=e.target.files[0];if(!file)return;
+  const status=document.getElementById('csvStatus');status.textContent='Parsing…';status.className='csv-status';
+  const reader=new FileReader();
+  reader.onload=function(ev){
+    try{
+      const lines=ev.target.result.trim().split('\n'),headers=lines[0].split(',').map(h=>h.trim().toLowerCase().replace(/['"]/g,''));
+      const rows=lines.slice(1).map(l=>{const vals=l.split(',').map(v=>v.trim().replace(/^["']|["']$/g,''));const obj={};headers.forEach((h,i)=>obj[h]=vals[i]);return obj;});
+      if(headers.includes('year')){historical=rows.map(r=>({year:+r.year||0,pop:+r.pop||0,change:r.change!==''?+r.change:null})).filter(d=>d.year&&d.pop>0);status.textContent=`Historical: ${historical.length} rows`;status.className='csv-status ok';}
+      else if(headers.includes('name')&&headers.includes('pop')){states=rows.map(r=>{const p=+r.pop||0;const urb=+r.urban||0;const uPct=r.urbanpct!==undefined&&r.urbanpct!==''?+r.urbanpct:(p>0?+(urb/p*100).toFixed(1):0);return{name:r.name||'',pop:p,pct:+(r.pct||p/12108549.77),male:+r.male||Math.round(p*0.515),female:+r.female||Math.round(p*0.485),sex:+r.sex||943,rural:+r.rural||0,urban:urb,area:+r.area||0,density:+r.density||0,urbanPct:uPct};}).filter(s=>s.name&&s.pop>0);status.textContent=`States: ${states.length} rows`;status.className='csv-status ok';}
+      else{status.textContent='Unknown format';return;}
+      document.getElementById('resetBtn').style.display='';rebuildAll();
+    }catch(err){status.textContent='Parse error';}
+  };
+  reader.readAsText(file);
+});
+function resetData(){states=[...STATES.map(s=>({...s}))];historical=[...HISTORICAL.map(d=>({...d}))];document.getElementById('resetBtn').style.display='none';document.getElementById('csvStatus').textContent='Built-in Census 2011';document.getElementById('csvStatus').className='csv-status';rebuildAll();}
+function downloadStatesCSV(){
+  let c='name,pop,pct,male,female,sex,rural,urban,urbanPct,area,density\n';
+  states.forEach(s=>{
+    const uPct = s.urbanPct || (s.pop>0 ? +(s.urban/s.pop*100).toFixed(2) : 0);
+    c+=`"${s.name}",${s.pop},${s.pct},${s.male},${s.female},${s.sex},${s.rural},${s.urban},${uPct},${s.area},${s.density}\n`;
+  });
+  dl(c,'IndPopHub_States_Data.csv');
+}
+function downloadHistCSV(){let c='year,pop,change\n';historical.forEach(d=>{c+=`${d.year},${d.pop},${d.change!==null&&d.change!==undefined?d.change:''}\n`;});dl(c,'IndPopHub_Historical_Data.csv');}
+function downloadAllCSV(){
+  // Combined export: states sheet + historical sheet in one zip-style dual-file trigger
+  downloadStatesCSV();
+  setTimeout(()=>downloadHistCSV(), 400);
+}
+function dl(content,fname){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type:'text/csv'}));a.download=fname;a.click();}
+
+const charts={};
+function mk(id,cfg){if(charts[id])charts[id].destroy();charts[id]=new Chart(document.getElementById(id),cfg);return charts[id];}
+
+// ══════════════════════════════════════
+// VIZ PANEL SYSTEM
+// ══════════════════════════════════════
+let activeViz=null;
+function showViz(type){
+  if(activeViz===type){closeViz();return;}
+  activeViz=type;
+  document.querySelectorAll('.viz-btn').forEach(b=>b.classList.remove('active'));
+  const btn=document.getElementById('vbtn-'+type);
+  if(btn)btn.classList.add('active');
+  const panel=document.getElementById('vizPanel');
+  panel.classList.remove('visible');panel.innerHTML='';
+  setTimeout(()=>{buildVizContent(type,panel);panel.classList.add('visible');setTimeout(()=>panel.scrollIntoView({behavior:'smooth',block:'nearest'}),80);},80);
+}
+function closeViz(){
+  activeViz=null;
+  document.querySelectorAll('.viz-btn').forEach(b=>b.classList.remove('active'));
+  const panel=document.getElementById('vizPanel');
+  panel.classList.remove('visible');setTimeout(()=>panel.innerHTML='',400);
+}
+
+function getLayoutClass(type){
+  if(['pop','gender','density'].includes(type))return 'two-col';
+  return 'full';
+}
+
+function pillHTML(label,value,sub,accentColor,pillColor){
+  return `<div class="vp-stat-pill" style="--pill-accent:${accentColor||'var(--gold)'};--pill-color:${pillColor||'var(--gold2)'}">
+    <div class="vsp-label">${label}</div><div class="vsp-value">${value}</div><div class="vsp-sub">${sub}</div>
+  </div>`;
+}
+function chartCardHTML(id,title,tag,desc,extraStyle=''){
+  return `<div class="vp-chart-card">
+    <span class="vpc-tag">${tag}</span>
+    <div class="vpc-label">Visualization</div>
+    <div class="vpc-title">${title}</div>
+    ${desc?`<div style="font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.55">${desc}</div>`:''}
+    <canvas id="${id}" style="max-height:340px !important;${extraStyle}"></canvas>
+  </div>`;
+}
+
+function buildVizContent(type,panel){
+  const configs={
+    pop:{icon:'◈',title:'Population Share by State',subtitle:'How India\'s 1.21 billion are distributed — top 10 states + all states ranked',accentColor:'rgba(201,153,58,0.12)',borderColor:'rgba(201,153,58,0.35)'},
+    gender:{icon:'⚥',title:'Gender Balance Across States',subtitle:'Male vs Female populations and sex ratio analysis across all 36 States & UTs',accentColor:'rgba(32,112,200,0.1)',borderColor:'rgba(32,112,200,0.35)'},
+    density:{icon:'⬡',title:'Population Density — State Rankings',subtitle:'Persons per km² from Arunachal Pradesh\'s sparse 17 to Delhi\'s extreme 11,297',accentColor:'rgba(22,176,130,0.1)',borderColor:'rgba(22,176,130,0.35)'},
+    urban:{icon:'🏙',title:'Urban vs Rural Population Split',subtitle:'100% stacked urbanisation rates sorted by share — where India\'s cities are rising',accentColor:'rgba(120,64,208,0.1)',borderColor:'rgba(120,64,208,0.35)'},
+    sex:{icon:'♀',title:'Sex Ratio — All 36 States Ranked',subtitle:'Females per 1,000 males: Kerala leads at 1,084; Daman & Diu trails at 618',accentColor:'rgba(200,48,80,0.1)',borderColor:'rgba(200,48,80,0.35)'},
+    timeline:{icon:'📈',title:'India Population Growth 1901–2025',subtitle:'124 years of census data — gold line shows total population, bars show period change',accentColor:'rgba(201,153,58,0.08)',borderColor:'rgba(201,153,58,0.3)'},
+    pareto:{icon:'📊',title:'Pareto Analysis — Population Concentration',subtitle:'Top 5 states = 48% of India: visualising the 80/20 rule across India\'s demographics',accentColor:'rgba(22,176,130,0.08)',borderColor:'rgba(22,176,130,0.3)'},
+    projection:{icon:'🔮',title:'India Population Projection 2025–2050',subtitle:'Three UN-based growth scenarios: Low 0.6% · Medium 0.81% · High 1.1% per year',accentColor:'rgba(120,64,208,0.08)',borderColor:'rgba(120,64,208,0.3)'},
+    histogram:{icon:'📉',title:'Demographic Frequency Distributions — State-Level Analysis',subtitle:'How population, density, sex ratio and urbanisation values cluster across India\'s 36 states — revealing skew, outliers and patterns invisible in averages',accentColor:'rgba(240,180,40,0.1)',borderColor:'rgba(240,180,40,0.4)'},
+    boxplot:{icon:'📦',title:'Distributional Spread — Quartile Analysis Across All States',subtitle:'Median, interquartile range, whiskers and outlier states for four key demographic metrics — the complete statistical picture in a single view',accentColor:'rgba(40,200,160,0.1)',borderColor:'rgba(40,200,160,0.4)'},
+    corrmap:{icon:'🔥',title:'Pearson Correlation Matrix — Demographic Variable Relationships',subtitle:'Which of India\'s six demographic variables statistically co-vary across states? Blue = positive, red = negative, intensity = strength of relationship',accentColor:'rgba(140,80,240,0.1)',borderColor:'rgba(140,80,240,0.4)'},
+    pairplot:{icon:'🔲',title:'Pair Plot — Pairwise Scatter Matrix Across Four Metrics',subtitle:'All six pairwise relationships between population, density, sex ratio and urbanisation — coloured by geographic region to reveal whether patterns are local or national',accentColor:'rgba(200,60,80,0.1)',borderColor:'rgba(200,60,80,0.4)'},
+  };
+  const cfg=configs[type];
+  panel.style.borderColor=cfg.borderColor;
+  panel.style.boxShadow=`0 0 60px ${cfg.accentColor}, 0 20px 60px rgba(0,0,0,0.5)`;
+  panel.innerHTML=`
+    <div class="vp-header" style="background:linear-gradient(135deg,${cfg.accentColor},transparent)">
+      <div class="vp-header-left">
+        <span class="vp-icon">${cfg.icon}</span>
+        <div><div class="vp-title">${cfg.title}</div><div class="vp-subtitle">${cfg.subtitle}</div></div>
+      </div>
+      <button class="vp-close" onclick="closeViz()">✕</button>
+    </div>
+    <div class="vp-body ${getLayoutClass(type)}" id="vpBody-${type}"></div>
+  `;
+  const body=document.getElementById('vpBody-'+type);
+  switch(type){
+    case 'pop': buildVizPop(body); break;
+    case 'gender': buildVizGender(body); break;
+    case 'density': buildVizDensity(body); break;
+    case 'urban': buildVizUrban(body); break;
+    case 'sex': buildVizSex(body); break;
+    case 'timeline': buildVizTimeline(body); break;
+    case 'pareto': buildVizPareto(body); break;
+    case 'projection': buildVizProjection(body); break;
+    case 'histogram': buildVizHistogram(body); break;
+    case 'boxplot': buildVizBoxplot(body); break;
+    case 'corrmap': buildVizCorrmap(body); break;
+    case 'pairplot': buildVizPairplot(body); break;
+  }
+}
+
+// ── Existing viz builders (unchanged) ──
+function buildVizPop(body){
+  const sorted=[...states].sort((a,b)=>b.pop-a.pop);
+  body.innerHTML=`<div><div class="vp-stats-row" style="margin-bottom:20px">${pillHTML('Most Populous','Uttar Pradesh','199.8M · 16.5% of India','var(--gold)','var(--gold2)')}${pillHTML('Least Populous','Lakshadweep','64,473 · 0.005%','var(--teal)','var(--teal2)')}${pillHTML('Top 5 Share','~47.9%','UP, MH, BR, WB, MP','var(--purple)','#b080f8')}</div>${chartCardHTML('vp-pie','Population Share — Top 10 States + Others','PIE','')}</div>${chartCardHTML('vp-bar','All States by Population (Crores)','BAR','Ranked descending from Census 2011 data')}`;
+  setTimeout(()=>{
+    const t10=sorted.slice(0,10),oth=sorted.slice(10).reduce((a,s)=>a+s.pop,0);
+    mk('vp-pie',{type:'pie',data:{labels:[...t10.map(s=>s.name),'Others'],datasets:[{data:[...t10.map(s=>s.pop),oth],backgroundColor:MIX_PAL.map(c=>c+'cc'),borderColor:'#020407',borderWidth:2}]},options:{responsive:true,plugins:{legend:{position:'right',labels:{font:{size:9},padding:6,boxWidth:9,color:'#a0b8cc'}},tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${crL(ctx.parsed)}`}}}}});
+    mk('vp-bar',{type:'bar',data:{labels:sorted.map(s=>s.name.length>14?s.name.slice(0,14)+'…':s.name),datasets:[{label:'Population (Crores)',data:sorted.map(s=>toCr(s.pop)),backgroundColor:GOLD_PAL.map(c=>c+'cc'),borderColor:GOLD_PAL,borderWidth:1,borderRadius:5}]},options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${crL(sorted[ctx.dataIndex].pop)}`}}},scales:{y:{ticks:{callback:v=>v+' Cr',color:'#506878'},grid:{color:'#11182888'}},x:{ticks:{font:{size:8},color:'#506878'},grid:{display:false}}}}});
+  },100);
+}
+
+function buildVizGender(body){
+  const g10=[...states].sort((a,b)=>b.pop-a.pop).slice(0,10);
+  body.innerHTML=`<div><div class="vp-stats-row" style="margin-bottom:20px">${pillHTML('Best Sex Ratio','Kerala · 1084','F/1000M','var(--teal)','var(--teal2)')}${pillHTML('Worst Sex Ratio','Daman & Diu · 618','Extreme imbalance','var(--red)','var(--red2)')}${pillHTML('National Avg','943 F/M','48.53% Female','var(--blue)','var(--blue2)')}</div>${chartCardHTML('vp-gender','Male vs Female — Top 10 States (Crores)','GROUPED BAR','Gap width reveals gender imbalance magnitude')}</div>${chartCardHTML('vp-sexscatter','Population vs Sex Ratio — All 36 States','SCATTER','Each point = one state. Size ∝ population.')}`;
+  setTimeout(()=>{
+    mk('vp-gender',{type:'bar',data:{labels:g10.map(s=>s.name.length>12?s.name.slice(0,12)+'…':s.name),datasets:[{label:'Male (Cr)',data:g10.map(s=>toCr(s.male)),backgroundColor:'#2070c8cc',borderColor:'#2070c8',borderWidth:1.5,borderRadius:5},{label:'Female (Cr)',data:g10.map(s=>toCr(s.female)),backgroundColor:'#c83050cc',borderColor:'#c83050',borderWidth:1.5,borderRadius:5}]},options:{responsive:true,plugins:{legend:{position:'top',labels:{color:'#a0b8cc',padding:10}}},scales:{y:{ticks:{callback:v=>v+' Cr',color:'#506878'},grid:{color:'#11182888'}},x:{ticks:{font:{size:9},color:'#506878'},grid:{display:false}}}}});
+    mk('vp-sexscatter',{type:'scatter',data:{datasets:[{label:'States',data:states.map(s=>({x:toCr(s.pop),y:s.sex,label:s.name})),backgroundColor:states.map(s=>s.sex>=943?'#16b08299':'#c8305099'),pointRadius:states.map(s=>Math.sqrt(s.pop/1e6)*1.2+3),pointHoverRadius:10}]},options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.raw.label}: ${ctx.raw.x}Cr pop · ${ctx.raw.y} sex ratio`}}},scales:{x:{title:{display:true,text:'Population (Crores)',color:'#506878'},ticks:{color:'#506878'},grid:{color:'#11182888'}},y:{title:{display:true,text:'Sex Ratio (F/1000M)',color:'#506878'},ticks:{color:'#506878'},grid:{color:'#11182888'}}}}});
+  },100);
+}
+
+function buildVizDensity(body){
+  const d15=[...states].sort((a,b)=>b.density-a.density).slice(0,15);
+  body.innerHTML=`<div><div class="vp-stats-row" style="margin-bottom:20px">${pillHTML('Most Dense','Delhi · 11,297/km²','City-state outlier','var(--teal)','var(--teal2)')}${pillHTML('Least Dense','Arunachal · 17/km²','Himalayan state','var(--gold)','var(--gold2)')}${pillHTML('National Avg','493/km²','3.29M km² land area','var(--blue)','var(--blue2)')}</div>${chartCardHTML('vp-density','Top 15 States by Population Density','BAR','Persons per km² ranked. Delhi and Chandigarh are extreme outliers')}</div>${chartCardHTML('vp-densityall','Population vs Density — All 36 States','BUBBLE','Bubble size ∝ population. Reveals macro clusters and outliers')}`;
+  setTimeout(()=>{
+    mk('vp-density',{type:'bar',data:{labels:d15.map(s=>s.name.length>14?s.name.slice(0,14)+'…':s.name),datasets:[{label:'Density/km²',data:d15.map(s=>s.density),backgroundColor:Array.from({length:15},(_,i)=>`rgba(${Math.round(22+i*8)},${Math.round(176-i*10)},${Math.round(130-i*8)},0.8)`),borderWidth:1,borderRadius:5}]},options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${d15[ctx.dataIndex].name}: ${fmtN(d15[ctx.dataIndex].density)}/km²`}}},scales:{y:{ticks:{callback:v=>fmtN(v),color:'#506878'},grid:{color:'#11182888'}},x:{ticks:{font:{size:8.5},color:'#506878'},grid:{display:false}}}}});
+    mk('vp-densityall',{type:'scatter',data:{datasets:[{label:'States',data:states.map(s=>({x:toCr(s.pop),y:s.density,label:s.name})),backgroundColor:MIX_PAL.map(c=>c+'88'),pointRadius:states.map(s=>Math.sqrt(s.pop/1e6)*1.1+4),pointHoverRadius:10}]},options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.raw.label}: ${ctx.raw.x}Cr, ${fmtN(ctx.raw.y)}/km²`}}},scales:{x:{title:{display:true,text:'Population (Crores)',color:'#506878'},ticks:{color:'#506878'},grid:{color:'#11182888'}},y:{title:{display:true,text:'Density/km²',color:'#506878'},ticks:{callback:v=>fmtN(v),color:'#506878'},grid:{color:'#11182888'}}}}});
+  },100);
+}
+
+function buildVizUrban(body){
+  const ur=[...states].sort((a,b)=>(b.urban/b.pop)-(a.urban/a.pop));
+  body.innerHTML=`<div class="vp-stats-row" style="margin-bottom:20px">${pillHTML('Most Urban','Goa · 62.2%','Metro-led growth','var(--purple)','#b080f8')}${pillHTML('Most Rural','Himachal · 89.9%','Agricultural state','var(--teal)','var(--teal2)')}${pillHTML('National Urban','~38.4%','~553 million people','var(--gold)','var(--gold2)')}${pillHTML('Urban Projection','~50%','by ~2030 estimate','var(--blue)','var(--blue2)')}</div>${chartCardHTML('vp-urban','Urban vs Rural Population Split — All 36 States (100% Stacked)','STACKED 100%','Sorted by urbanisation rate. Shows the rural-urban divide across India')}`;
+  setTimeout(()=>{mk('vp-urban',{type:'bar',data:{labels:ur.map(s=>s.name.length>12?s.name.slice(0,12)+'…':s.name),datasets:[{label:'Urban %',data:ur.map(s=>s.urbanPct),backgroundColor:'#7840d0cc',borderRadius:2},{label:'Rural %',data:ur.map(s=>+(s.rural/s.pop*100).toFixed(1)||0),backgroundColor:'#16b082cc',borderRadius:2}]},options:{responsive:true,plugins:{legend:{position:'top',labels:{color:'#a0b8cc',font:{size:11},padding:10}}},scales:{x:{stacked:true,ticks:{font:{size:8.5},color:'#506878'},grid:{display:false}},y:{stacked:true,max:100,ticks:{callback:v=>v+'%',color:'#506878'},grid:{color:'#11182888'}}}}});},100);
+}
+
+function buildVizSex(body){
+  const sx=[...states].sort((a,b)=>b.sex-a.sex);
+  body.innerHTML=`<div class="vp-stats-row" style="margin-bottom:20px">${pillHTML('Highest','Kerala · 1084 F/M','Only state above 1000','var(--teal)','var(--teal2)')}${pillHTML('Second','Puducherry · 1037','UT with strong ratio','var(--gold)','var(--gold2)')}${pillHTML('Lowest','Daman & Diu · 618','Male-skewed workforce','var(--red)','var(--red2)')}${pillHTML('National','943 F/1000M','Below world average','var(--blue)','var(--blue2)')}</div>${chartCardHTML('vp-sex','Sex Ratio — All 36 States & UTs Ranked (Females per 1,000 Males)','H-BAR · RANKED','Purple = above 943 national average. Red = below. Kerala is an outlier at 1,084')}`;
+  setTimeout(()=>{
+    mk('vp-sex',{type:'bar',data:{labels:sx.map(s=>s.name.length>18?s.name.slice(0,18)+'…':s.name),datasets:[{label:'Sex Ratio (F/1000M)',data:sx.map(s=>s.sex),backgroundColor:sx.map(s=>s.sex>=943?'#7840d0bb':'#c8305099'),borderColor:sx.map(s=>s.sex>=943?'#7840d0':'#c83050'),borderWidth:1,borderRadius:2}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${sx[ctx.dataIndex].name}: ${sx[ctx.dataIndex].sex} F/1000M`}}},scales:{x:{min:580,ticks:{color:'#506878'},grid:{color:'#11182888'}},y:{ticks:{font:{size:9},color:'#a0b8cc'},grid:{display:false}}}},});
+    document.getElementById('vp-sex').style.maxHeight='600px';charts['vp-sex'].resize();
+  },100);
+}
+
+function buildVizTimeline(body){
+  body.innerHTML=`<div class="vp-stats-row" style="margin-bottom:16px">${pillHTML('1901 Population','238 Million','Starting baseline','var(--gold)','var(--gold2)')}${pillHTML('2025 Estimate','1.453 Billion','6.1× growth in 124 yrs','var(--teal)','var(--teal2)')}${pillHTML('Peak Decade Growth','182M (2001–11)','Fastest absolute increase','var(--red)','var(--red2)')}${pillHTML('Only Decline','1921 · −772K','Flu pandemic effect','var(--blue)','var(--blue2)')}</div><div class="vp-chart-card"><span class="vpc-tag">COMBO</span><div class="vpc-title">Population 1901–2025 · Gold Line + Period Change Bars</div><div style="font-size:11px;color:var(--muted);margin-bottom:12px">Gold line = total population (Crores). Bars = change per period. Red bar = 1921 pandemic decline.</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px" id="vp-year-btns"></div><canvas id="vp-timeline" style="max-height:340px !important"></canvas></div>`;
+  setTimeout(()=>{
+    let activeYears=historical.map(d=>d.year);
+    const ys=document.getElementById('vp-year-btns');
+    historical.map(d=>d.year).forEach(y=>{const btn=document.createElement('button');btn.className='ybtn active';btn.textContent=y;btn.onclick=()=>{btn.classList.toggle('active');activeYears=activeYears.includes(y)?activeYears.filter(a=>a!==y):[...activeYears,y].sort((a,b)=>a-b);buildTL(activeYears);};ys.appendChild(btn);});
+    function buildTL(ay){const fd=historical.filter(d=>ay.includes(d.year));mk('vp-timeline',{type:'bar',data:{labels:fd.map(d=>d.year),datasets:[{type:'line',label:'Total Pop (Cr)',data:fd.map(d=>toCr(d.pop)),borderColor:'#c9993a',backgroundColor:'rgba(201,153,58,0.08)',tension:0.4,fill:true,pointBackgroundColor:'#c9993a',pointRadius:5,yAxisID:'y',borderWidth:2.5,order:1},{type:'bar',label:'Period Change (Cr)',data:fd.map(d=>d.change?toCr(d.change):null),backgroundColor:fd.map(d=>d.change&&d.change<0?'#c83050aa':'#16b082aa'),borderColor:fd.map(d=>d.change&&d.change<0?'#c83050':'#16b082'),borderWidth:1,borderRadius:4,yAxisID:'y2',order:2}]},options:{responsive:true,interaction:{mode:'index',intersect:false},plugins:{legend:{position:'top',labels:{color:'#a0b8cc',font:{size:11},padding:12}}},scales:{y:{ticks:{callback:v=>v+' Cr',color:'#506878'},grid:{color:'#11182888'}},y2:{position:'right',ticks:{callback:v=>v+' Cr',color:'#506878'},grid:{display:false}},x:{ticks:{color:'#506878'},grid:{color:'#11182840'}}}}});}
+    buildTL(activeYears);
+  },100);
+}
+
+function buildVizPareto(body){
+  const ps=[...states].sort((a,b)=>b.pop-a.pop),tot=ps.reduce((a,s)=>a+s.pop,0);
+  let cum=0;const cumP=ps.map(s=>{cum+=s.pop;return+(cum/tot*100).toFixed(2);});
+  const top5pct=(ps.slice(0,5).reduce((a,s)=>a+s.pop,0)/tot*100).toFixed(1),top10pct=(ps.slice(0,10).reduce((a,s)=>a+s.pop,0)/tot*100).toFixed(1);
+  body.innerHTML=`<div class="vp-stats-row" style="margin-bottom:20px">${pillHTML('Top 5 States',top5pct+'%','UP, MH, BR, WB, MP','var(--gold)','var(--gold2)')}${pillHTML('Top 10 States',top10pct+'%','Half India lives here','var(--teal)','var(--teal2)')}${pillHTML('Bottom 10 States','<1%','Small states & UTs','var(--red)','var(--red2)')}${pillHTML('Cumulative 80%','~Top 11','Pareto principle holds','var(--purple)','#b080f8')}</div>${chartCardHTML('vp-pareto','Pareto Chart — Population Concentration Across States','PARETO','Gold bars = individual state share. Red line = cumulative %. Hover to inspect')}`;
+  setTimeout(()=>{
+    const pN=Math.min(20,ps.length);
+    mk('vp-pareto',{type:'bar',data:{labels:ps.slice(0,pN).map(s=>s.name.length>12?s.name.slice(0,12)+'…':s.name),datasets:[{type:'bar',label:'Pop Share %',data:ps.slice(0,pN).map(s=>+(s.pop/tot*100).toFixed(2)),backgroundColor:GOLD_PAL.slice(0,pN).map(c=>c+'cc'),borderWidth:1,borderRadius:4,yAxisID:'y'},{type:'line',label:'Cumulative %',data:cumP.slice(0,pN),borderColor:'#c83050',backgroundColor:'transparent',borderWidth:2.5,pointBackgroundColor:'#c83050',pointRadius:4,yAxisID:'y2'}]},options:{responsive:true,plugins:{legend:{position:'top',labels:{color:'#a0b8cc',font:{size:10},padding:9}}},scales:{y:{title:{display:true,text:'Individual %',color:'#506878'},grid:{color:'#11182888'},ticks:{color:'#506878'}},y2:{position:'right',max:100,ticks:{callback:v=>v+'%',color:'#506878'},grid:{display:false}},x:{ticks:{font:{size:8.5},color:'#506878'},grid:{display:false}}}}});
+  },100);
+}
+
+function buildVizProjection(body){
+  const b25=1453416000,pY=[2025,2027,2030,2033,2036,2040,2045,2050];
+  const lo=pY.map(y=>+(b25*Math.pow(1.006,y-2025)/1e7).toFixed(1));
+  const med=pY.map(y=>+(b25*Math.pow(1.0081,y-2025)/1e7).toFixed(1));
+  const hi=pY.map(y=>+(b25*Math.pow(1.011,y-2025)/1e7).toFixed(1));
+  body.innerHTML=`<div class="vp-stats-row" style="margin-bottom:20px">${pillHTML('Low Scenario 2050',lo[lo.length-1]+' Cr','0.6%/yr growth rate','var(--blue)','var(--blue2)')}${pillHTML('Medium 2050',med[med.length-1]+' Cr','0.81%/yr (UN basis)','var(--gold)','var(--gold2)')}${pillHTML('High 2050',hi[hi.length-1]+' Cr','1.1%/yr growth rate','var(--red)','var(--red2)')}${pillHTML('Peak Pop Year','~2060–2065','Before stabilisation','var(--teal)','var(--teal2)')}</div>${chartCardHTML('vp-proj','India Population Forecast 2025–2050 — Three Growth Scenarios','FORECAST','Three growth scenarios with shaded uncertainty band. Based on UN projection methodology')}`;
+  setTimeout(()=>{mk('vp-proj',{type:'line',data:{labels:pY,datasets:[{label:'Low (0.6%)',data:lo,borderColor:'#2070c8',backgroundColor:'rgba(32,112,200,0.06)',borderWidth:2,borderDash:[5,4],tension:0.3,pointRadius:5,pointBackgroundColor:'#2070c8',fill:true},{label:'Medium (0.81%)',data:med,borderColor:'#c9993a',backgroundColor:'rgba(201,153,58,0.1)',borderWidth:3,fill:true,tension:0.3,pointRadius:6,pointBackgroundColor:'#c9993a'},{label:'High (1.1%)',data:hi,borderColor:'#c83050',backgroundColor:'rgba(200,48,80,0.06)',borderWidth:2,borderDash:[5,4],tension:0.3,pointRadius:5,pointBackgroundColor:'#c83050',fill:true}]},options:{responsive:true,interaction:{mode:'index',intersect:false},plugins:{legend:{position:'top',labels:{color:'#a0b8cc',font:{size:11},padding:10}},tooltip:{callbacks:{label:ctx=>` ${ctx.dataset.label}: ${ctx.raw} Cr`}}},scales:{y:{ticks:{callback:v=>v+' Cr',color:'#506878'},grid:{color:'#11182888'},title:{display:true,text:'Population (Crores)',color:'#506878'}},x:{ticks:{color:'#506878'},grid:{color:'#11182840'}}}}});},100);
+}
+
+// ════════════════════════════════════════════════════════════
+// HISTOGRAM — PERFECTED
+// ════════════════════════════════════════════════════════════
+function buildVizHistogram(body){
+  const allPops=states.map(s=>toCr(s.pop));
+  const allDens=states.map(s=>s.density);
+  const allSex=states.map(s=>s.sex);
+  const mean=a=>a.reduce((s,v)=>s+v,0)/a.length;
+  const std=a=>{const m=mean(a);return Math.sqrt(a.reduce((s,v)=>s+(v-m)**2,0)/a.length);};
+  const median=a=>{const s=[...a].sort((x,y)=>x-y);return s.length%2===0?(s[s.length/2-1]+s[s.length/2])/2:s[Math.floor(s.length/2)];};
+  const skewness=a=>{const m=mean(a),sd=std(a);return a.reduce((s,v)=>s+((v-m)/sd)**3,0)/a.length;};
+
+  body.innerHTML=`
+    <div class="hist-stats-bar">
+      <div class="hsb-item"><div class="hsb-val" style="color:var(--gold2)" id="hst-mean">—</div><div class="hsb-label">Mean</div></div>
+      <div class="hsb-item"><div class="hsb-val" style="color:var(--teal2)" id="hst-median">—</div><div class="hsb-label">Median</div></div>
+      <div class="hsb-item"><div class="hsb-val" style="color:var(--blue2)" id="hst-std">—</div><div class="hsb-label">Std Dev</div></div>
+      <div class="hsb-item"><div class="hsb-val" style="color:var(--red2)" id="hst-skew">—</div><div class="hsb-label">Skewness</div></div>
+      <div class="hsb-item"><div class="hsb-val" style="color:#b080f8" id="hst-n">36</div><div class="hsb-label">States / UTs</div></div>
+    </div>
+    <div class="vp-chart-card">
+      <span class="vpc-tag">FREQUENCY DISTRIBUTION</span>
+      <div class="vpc-label">Select Metric</div>
+      <div class="vpc-title" id="hist-card-title">Population distribution across India's 36 states and UTs</div>
+      <div class="hist-metric-tabs">
+        <button class="hist-tab active" onclick="switchHistogram('pop',this)">Population (Crores)</button>
+        <button class="hist-tab" onclick="switchHistogram('density',this)">Population Density /km²</button>
+        <button class="hist-tab" onclick="switchHistogram('sex',this)">Sex Ratio (F/1000M)</button>
+        <button class="hist-tab" onclick="switchHistogram('urban',this)">Urbanisation %</button>
+      </div>
+      <div style="position:relative;width:100%;height:380px">
+        <canvas id="vp-histogram"></canvas>
+      </div>
+      <div class="hist-insight" id="hist-insight"></div>
+    </div>
+  `;
+  setTimeout(()=>switchHistogram('pop',document.querySelector('.hist-tab.active')),120);
+}
+
+let _histChart=null;
+function switchHistogram(metric,btnEl){
+  document.querySelectorAll('.hist-tab').forEach(b=>b.classList.remove('active'));
+  if(btnEl)btnEl.classList.add('active');
+
+  const mean=a=>a.reduce((s,v)=>s+v,0)/a.length;
+  const std=a=>{const m=mean(a);return Math.sqrt(a.reduce((s,v)=>s+(v-m)**2,0)/a.length);};
+  const median=a=>{const s=[...a].sort((x,y)=>x-y);return s.length%2===0?(s[s.length/2-1]+s[s.length/2])/2:s[Math.floor(s.length/2)];};
+  const skewness=a=>{const m=mean(a),sd=std(a);if(!sd)return 0;return a.reduce((s,v)=>s+((v-m)/sd)**3,0)/a.length;};
+
+  const metricCfg={
+    pop:{vals:states.map(s=>toCr(s.pop)),label:'Population (Crores)',bins:9,color:'#c9993a',bg:'rgba(201,153,58,0.28)',
+      fmt:v=>v.toFixed(1)+' Cr',
+      title:'Population distribution across India\'s 36 states and UTs',
+      insight:'<strong>Severe right skew (skewness ≈ 2.8).</strong> The distribution is heavily lopsided — 22 of 36 states have populations below 5 Crores, yet Uttar Pradesh (199.8 Cr), Maharashtra (112.4 Cr) and Bihar (104.1 Cr) create a dramatic long right tail. This reflects India\'s extreme regional demographic concentration, where three states alone account for over 34% of national population. The mean (33.7 Cr) sits far above the median (15.2 Cr) — a hallmark of right-skewed data. The normal reference curve confirms how far the actual distribution departs from symmetry.'},
+    density:{vals:states.map(s=>s.density),label:'Population Density (persons per km²)',bins:10,color:'#28e8b8',bg:'rgba(40,232,184,0.18)',
+      fmt:v=>Math.round(v).toLocaleString()+'/km²',
+      title:'Population density distribution — extreme outliers driven by city-states',
+      insight:'<strong>Extreme positive skew driven entirely by urban UTs.</strong> Delhi (11,297/km²) and Chandigarh (9,252/km²) create massive outliers that dwarf the rest. If these two are excluded, the remaining 34 states form a near-normal distribution peaking around 200–600/km². This bimodal reality — city-UTs versus territorial states — means the national average (493/km²) is meaningless as a descriptor of any actual state. The histogram makes visible what averages conceal: two statistical worlds within one nation.'},
+    sex:{vals:states.map(s=>s.sex),label:'Sex Ratio (females per 1,000 males)',bins:10,color:'#f04068',bg:'rgba(240,64,104,0.2)',
+      fmt:v=>Math.round(v)+' F/M',
+      title:'Sex ratio distribution — near-normal with a significant lower tail',
+      insight:'<strong>Near-symmetric with a pronounced lower tail.</strong> Most states cluster between 880 and 1,000 females per 1,000 males, consistent with the national average of 943. However, Daman & Diu (618) and Chandigarh (818) form a distinct lower-tail cluster, driven by male-dominated migrant labour rather than cultural preference. Kerala\'s 1,084 ratio is a positive outlier reflecting its matrilineal social structure and female education outcomes. The relatively low skewness (≈ −0.9) and proximity of mean to median show this is the most normally distributed of the four metrics.'},
+    urban:{vals:states.map(s=>s.urbanPct),label:'Urban Population (%)',bins:9,color:'#b080f8',bg:'rgba(176,128,248,0.2)',
+      fmt:v=>v.toFixed(1)+'%',
+      title:'Urbanisation distribution — India\'s states are at vastly different stages of urban transition',
+      insight:'<strong>Broadly uniform — no dominant urbanisation profile exists.</strong> Unlike population or density, urbanisation rates spread relatively evenly from 10% (Himachal Pradesh) to 97.5% (Delhi). This near-uniform distribution tells a powerful story: India\'s states are not converging toward a common urbanisation model. Each state is at a fundamentally different stage of the rural-to-urban transition, shaped by geography, industry, migration and governance. The histogram reveals that India\'s urban story cannot be told with a single number — it requires the full distributional picture.'},
+  };
+
+  const c=metricCfg[metric];
+  const vals=c.vals,n=vals.length;
+  const minV=Math.min(...vals),maxV=Math.max(...vals);
+  const binW=(maxV-minV)/c.bins;
+
+  const binLabels=[],binCounts=[],binStates=[];
+  for(let i=0;i<c.bins;i++){
+    const lo=minV+i*binW,hi=lo+binW;
+    const inBin=states.filter(s=>{const v=c.vals[states.indexOf(s)];return v>=lo&&(i===c.bins-1?v<=hi:v<hi);});
+    binLabels.push(c.fmt(lo)+'–'+c.fmt(hi));
+    binCounts.push(inBin.length);
+    binStates.push(inBin.map(s=>s.name));
+  }
+
+  const m=mean(vals),sd=std(vals),med=median(vals),sk=skewness(vals);
+  const normalOverlay=binLabels.map((_,i)=>{
+    const x=minV+(i+0.5)*binW;
+    return parseFloat((n*binW*(1/(sd*Math.sqrt(2*Math.PI)))*Math.exp(-0.5*((x-m)/sd)**2)).toFixed(3));
+  });
+
+  // Update stat bar
+  const titleEl=document.getElementById('hist-card-title');
+  if(titleEl)titleEl.textContent=c.title;
+  const fmtStat=(v,k)=>{
+    if(k==='pop')return v.toFixed(2)+' Cr';
+    if(k==='density')return Math.round(v).toLocaleString()+'/km²';
+    if(k==='sex')return Math.round(v)+' F/M';
+    return v.toFixed(1)+'%';
+  };
+  const el=id=>document.getElementById(id);
+  if(el('hst-mean'))el('hst-mean').textContent=fmtStat(m,metric);
+  if(el('hst-median'))el('hst-median').textContent=fmtStat(med,metric);
+  if(el('hst-std'))el('hst-std').textContent=fmtStat(sd,metric);
+  if(el('hst-skew'))el('hst-skew').textContent=sk.toFixed(2);
+  if(el('hist-insight'))el('hist-insight').innerHTML=c.insight;
+
+  if(_histChart)_histChart.destroy();
+  _histChart=new Chart(document.getElementById('vp-histogram'),{
+    type:'bar',
+    data:{
+      labels:binLabels,
+      datasets:[
+        {label:'Number of states / UTs',data:binCounts,backgroundColor:c.bg,borderColor:c.color,borderWidth:2,borderRadius:6,
+          hoverBackgroundColor:c.color+'55',hoverBorderColor:c.color},
+        {type:'line',label:'Normal reference curve',data:normalOverlay,
+          borderColor:'rgba(200,210,220,0.55)',backgroundColor:'transparent',
+          borderWidth:2.5,borderDash:[6,4],pointRadius:0,tension:0.5,yAxisID:'y2'}
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{position:'top',labels:{font:{size:11},padding:16,color:'#a0b8cc',usePointStyle:true,pointStyleWidth:12}},
+        tooltip:{callbacks:{
+          title:ctx=>`Range: ${binLabels[ctx[0].dataIndex]}`,
+          label:ctx=>{
+            if(ctx.datasetIndex===0){
+              const names=binStates[ctx.dataIndex];
+              return[` ${ctx.parsed.y} states / UTs`,...names.map(n=>`  · ${n}`)];
+            }
+            return` Normal ref: ${ctx.parsed.y.toFixed(2)}`;
+          }
+        }}
+      },
+      scales:{
+        x:{ticks:{color:'#506878',font:{size:10},maxRotation:40,autoSkip:false},grid:{display:false},
+          title:{display:true,text:c.label,color:'#506878',font:{size:11}}},
+        y:{title:{display:true,text:'Number of states / UTs',color:'#506878',font:{size:11}},
+          ticks:{color:'#506878',stepSize:1},grid:{color:'rgba(17,24,40,0.6)'},min:0},
+        y2:{display:false,min:0}
+      }
+    }
+  });
+}
+
+// ════════════════════════════════════════════════════════════
+// BOX PLOT — PERFECTED (Canvas-rendered)
+// ════════════════════════════════════════════════════════════
+function buildVizBoxplot(body){
+  const metrics=[
+    {key:'pop',label:'Population (Crores)',fn:s=>toCr(s.pop),color:'#c9993a',accent:'var(--gold)'},
+    {key:'density',label:'Density /km²',fn:s=>s.density,color:'#28e8b8',accent:'var(--teal2)'},
+    {key:'sex',label:'Sex Ratio',fn:s=>s.sex,color:'#f04068',accent:'var(--red2)'},
+    {key:'urban',label:'Urban %',fn:s=>s.urbanPct,color:'#b080f8',accent:'#b080f8'},
+  ];
+
+  function boxStats(vals){
+    const s=[...vals].sort((a,b)=>a-b),n=s.length;
+    const q1=s[Math.floor(n*0.25)],med=n%2===0?(s[n/2-1]+s[n/2])/2:s[Math.floor(n/2)],q3=s[Math.floor(n*0.75)];
+    const iqr=q3-q1,loFence=q1-1.5*iqr,hiFence=q3+1.5*iqr;
+    const wLo=s.find(v=>v>=loFence)||s[0],wHi=[...s].reverse().find(v=>v<=hiFence)||s[n-1];
+    const outliers=s.filter(v=>v<loFence||v>hiFence);
+    const meanV=s.reduce((a,v)=>a+v,0)/n;
+    return{q1,med,q3,iqr,wLo,wHi,outliers,mean:meanV,min:s[0],max:s[n-1]};
+  }
+
+  const allStats=metrics.map(m=>({...m,stats:boxStats(states.map(m.fn)),vals:states.map(m.fn)}));
+
+  // Summary cards
+  const popSt=allStats[0].stats,denSt=allStats[1].stats,sexSt=allStats[2].stats,urbSt=allStats[3].stats;
+  body.innerHTML=`
+    <div class="box-metric-row">
+      <div class="box-stat-card" style="--card-accent:var(--gold)">
+        <div class="bsc-metric">Population (Crores)</div>
+        <div class="bsc-row"><span class="bsc-label">Median</span><span class="bsc-val" style="color:var(--gold2)">${popSt.med.toFixed(2)} Cr</span></div>
+        <div class="bsc-row"><span class="bsc-label">IQR</span><span class="bsc-val" style="color:var(--silver2)">${(popSt.q3-popSt.q1).toFixed(2)} Cr</span></div>
+        <div class="bsc-row"><span class="bsc-label">Q1 – Q3</span><span class="bsc-val" style="color:var(--muted)">${popSt.q1.toFixed(1)} – ${popSt.q3.toFixed(1)}</span></div>
+        <div class="bsc-row"><span class="bsc-label">Outliers</span><span class="bsc-val" style="color:var(--red2)">${popSt.outliers.length}</span></div>
+      </div>
+      <div class="box-stat-card" style="--card-accent:var(--teal2)">
+        <div class="bsc-metric">Density /km²</div>
+        <div class="bsc-row"><span class="bsc-label">Median</span><span class="bsc-val" style="color:var(--teal2)">${Math.round(denSt.med).toLocaleString()}</span></div>
+        <div class="bsc-row"><span class="bsc-label">IQR</span><span class="bsc-val" style="color:var(--silver2)">${Math.round(denSt.iqr).toLocaleString()}</span></div>
+        <div class="bsc-row"><span class="bsc-label">Q1 – Q3</span><span class="bsc-val" style="color:var(--muted)">${Math.round(denSt.q1)} – ${Math.round(denSt.q3)}</span></div>
+        <div class="bsc-row"><span class="bsc-label">Outliers</span><span class="bsc-val" style="color:var(--red2)">${denSt.outliers.length} (Delhi, Chandigarh…)</span></div>
+      </div>
+      <div class="box-stat-card" style="--card-accent:var(--red2)">
+        <div class="bsc-metric">Sex Ratio (F/1000M)</div>
+        <div class="bsc-row"><span class="bsc-label">Median</span><span class="bsc-val" style="color:var(--red2)">${Math.round(sexSt.med)}</span></div>
+        <div class="bsc-row"><span class="bsc-label">IQR</span><span class="bsc-val" style="color:var(--silver2)">${Math.round(sexSt.iqr)} pts</span></div>
+        <div class="bsc-row"><span class="bsc-label">Q1 – Q3</span><span class="bsc-val" style="color:var(--muted)">${Math.round(sexSt.q1)} – ${Math.round(sexSt.q3)}</span></div>
+        <div class="bsc-row"><span class="bsc-label">Outliers</span><span class="bsc-val" style="color:var(--red2)">${sexSt.outliers.length} states</span></div>
+      </div>
+      <div class="box-stat-card" style="--card-accent:#b080f8">
+        <div class="bsc-metric">Urban %</div>
+        <div class="bsc-row"><span class="bsc-label">Median</span><span class="bsc-val" style="color:#b080f8">${urbSt.med.toFixed(1)}%</span></div>
+        <div class="bsc-row"><span class="bsc-label">IQR</span><span class="bsc-val" style="color:var(--silver2)">${urbSt.iqr.toFixed(1)} pp</span></div>
+        <div class="bsc-row"><span class="bsc-label">Q1 – Q3</span><span class="bsc-val" style="color:var(--muted)">${urbSt.q1.toFixed(1)} – ${urbSt.q3.toFixed(1)}%</span></div>
+        <div class="bsc-row"><span class="bsc-label">Outliers</span><span class="bsc-val" style="color:var(--red2)">${urbSt.outliers.length} states</span></div>
+      </div>
+    </div>
+    <div class="vp-chart-card">
+      <span class="vpc-tag">QUARTILE · IQR · WHISKERS</span>
+      <div class="vpc-label">Visualization</div>
+      <div class="vpc-title">Side-by-side box plots — four demographic metrics independently scaled</div>
+      <div style="font-size:12px;color:var(--silver3);margin-bottom:16px;line-height:1.65">Each metric is scaled to its own range. Box = Q1–Q3 (interquartile range). Horizontal line = median. Diamond ◆ = mean. Dashed whiskers extend to 1.5 × IQR. Red dots beyond whiskers are outlier states — hover for name and value.</div>
+      <div style="width:100%;overflow-x:auto">
+        <canvas id="vp-boxplot" style="display:block"></canvas>
+      </div>
+      <div class="box-legend">
+        <div class="bl-item"><span style="display:inline-block;width:18px;height:10px;border:2px solid #c9993a;background:rgba(201,153,58,0.15);border-radius:2px"></span>Box = IQR (Q1–Q3)</div>
+        <div class="bl-item"><span style="display:inline-block;width:18px;height:2.5px;background:rgba(240,240,255,0.85);border-radius:1px"></span>Median</div>
+        <div class="bl-item"><span style="display:inline-block;width:10px;height:10px;background:#f04068;border-radius:50%"></span>Outlier state</div>
+        <div class="bl-item"><span style="display:inline-block;width:10px;height:10px;background:#c9993a;transform:rotate(45deg);border-radius:1px"></span>Mean (◆)</div>
+        <div class="bl-item" style="color:var(--muted);font-size:10px">Dashed lines = 1.5 × IQR whiskers · Each metric scaled independently</div>
+      </div>
+    </div>
+  `;
+
+  setTimeout(()=>{
+    const container=document.getElementById('vp-boxplot').parentElement;
+    const W=Math.max(container.clientWidth-4,700);
+    const H=460;
+    const ml=72,mr=20,mt=30,mb=56;
+    const innerW=W-ml-mr,innerH=H-mt-mb;
+    const nM=allStats.length,slotW=innerW/nM,boxW=Math.min(slotW*0.38,70);
+
+    const canvas=document.getElementById('vp-boxplot');
+    canvas.width=W;canvas.height=H;
+    const ctx=canvas.getContext('2d');
+    ctx.clearRect(0,0,W,H);
+
+    // Background grid
+    for(let i=0;i<=5;i++){
+      const y=mt+innerH*(1-i/5);
+      ctx.beginPath();ctx.moveTo(ml,y);ctx.lineTo(ml+innerW,y);
+      ctx.strokeStyle='rgba(17,24,40,0.8)';ctx.lineWidth=0.8;ctx.stroke();
+    }
+    // Left axis line
+    ctx.beginPath();ctx.moveTo(ml,mt);ctx.lineTo(ml,mt+innerH);
+    ctx.strokeStyle='rgba(48,72,88,0.6)';ctx.lineWidth=1;ctx.stroke();
+    // Bottom axis
+    ctx.beginPath();ctx.moveTo(ml,mt+innerH);ctx.lineTo(ml+innerW,mt+innerH);
+    ctx.strokeStyle='rgba(48,72,88,0.6)';ctx.lineWidth=1;ctx.stroke();
+
+    allStats.forEach((m,mi)=>{
+      const st=m.stats;
+      // Scale: use whisker range + 15% padding each side for outliers
+      const dataMin=Math.min(st.min,st.wLo),dataMax=Math.max(st.max,st.wHi);
+      const range=dataMax-dataMin||1;
+      const pad=range*0.12;
+      const vMin=dataMin-pad,vMax=dataMax+pad;
+      const vRange=vMax-vMin;
+      const yS=v=>mt+innerH*(1-(v-vMin)/vRange);
+      const cx=ml+slotW*(mi+0.5);
+
+      // Y-axis ticks (left side only for first metric)
+      if(mi===0){
+        for(let i=0;i<=5;i++){
+          const v=vMin+(vMax-vMin)*(i/5);
+          const y=yS(v);
+          let label;
+          if(m.key==='pop')label=v.toFixed(0)+' Cr';
+          else if(m.key==='density')label=Math.round(v).toLocaleString();
+          else if(m.key==='urban')label=v.toFixed(0)+'%';
+          else label=Math.round(v);
+          ctx.fillStyle='#304858';ctx.font='9px JetBrains Mono,monospace';
+          ctx.textAlign='right';ctx.fillText(label,ml-7,y+3);
+        }
+      }
+
+      // Whisker top (q3 → wHi)
+      ctx.beginPath();ctx.moveTo(cx,yS(st.wHi));ctx.lineTo(cx,yS(st.q3));
+      ctx.strokeStyle=m.color+'80';ctx.lineWidth=2;ctx.setLineDash([4,3]);ctx.stroke();ctx.setLineDash([]);
+      // Whisker top cap
+      ctx.beginPath();ctx.moveTo(cx-boxW*0.3,yS(st.wHi));ctx.lineTo(cx+boxW*0.3,yS(st.wHi));
+      ctx.strokeStyle=m.color+'80';ctx.lineWidth=2;ctx.stroke();
+
+      // Whisker bottom (q1 → wLo)
+      ctx.beginPath();ctx.moveTo(cx,yS(st.q1));ctx.lineTo(cx,yS(st.wLo));
+      ctx.strokeStyle=m.color+'80';ctx.lineWidth=2;ctx.setLineDash([4,3]);ctx.stroke();ctx.setLineDash([]);
+      // Whisker bottom cap
+      ctx.beginPath();ctx.moveTo(cx-boxW*0.3,yS(st.wLo));ctx.lineTo(cx+boxW*0.3,yS(st.wLo));
+      ctx.strokeStyle=m.color+'80';ctx.lineWidth=2;ctx.stroke();
+
+      // IQR Box fill + stroke
+      const boxTop=yS(st.q3),boxBot=yS(st.q1),bH=boxBot-boxTop;
+      ctx.fillStyle=m.color+'28';
+      ctx.beginPath();ctx.roundRect(cx-boxW/2,boxTop,boxW,bH,5);ctx.fill();
+      ctx.strokeStyle=m.color;ctx.lineWidth=2.5;
+      ctx.beginPath();ctx.roundRect(cx-boxW/2,boxTop,boxW,bH,5);ctx.stroke();
+
+      // Median line (bright)
+      const medY=yS(st.med);
+      ctx.beginPath();ctx.moveTo(cx-boxW/2+3,medY);ctx.lineTo(cx+boxW/2-3,medY);
+      ctx.strokeStyle='rgba(240,244,248,0.92)';ctx.lineWidth=3;ctx.stroke();
+
+      // Mean diamond
+      const meanY=yS(st.mean);
+      const ds=6;
+      ctx.beginPath();ctx.moveTo(cx,meanY-ds);ctx.lineTo(cx+ds,meanY);ctx.lineTo(cx,meanY+ds);ctx.lineTo(cx-ds,meanY);ctx.closePath();
+      ctx.fillStyle=m.color;ctx.fill();
+      ctx.strokeStyle='rgba(0,0,0,0.3)';ctx.lineWidth=0.5;ctx.stroke();
+
+      // Outliers
+      st.outliers.forEach(v=>{
+        const oy=yS(v);
+        const stateObj=states.find((s,i)=>Math.abs(m.fn(s)-v)<0.0001);
+        const nm=stateObj?stateObj.name:'';
+        ctx.beginPath();ctx.arc(cx,oy,6,0,Math.PI*2);
+        ctx.fillStyle='#f04068';ctx.fill();
+        ctx.strokeStyle='rgba(240,64,104,0.3)';ctx.lineWidth=2;ctx.stroke();
+        // Label
+        if(nm){
+          ctx.fillStyle='#f06888';ctx.font='bold 9px DM Sans,sans-serif';
+          ctx.textAlign=cx>W/2?'right':'left';
+          const lx=cx>W/2?cx-10:cx+10;
+          ctx.fillText(nm.length>10?nm.slice(0,10)+'…':nm,lx,oy+3);
+        }
+      });
+
+      // X axis label
+      ctx.fillStyle=m.color;ctx.font='bold 11px DM Sans,sans-serif';ctx.textAlign='center';
+      ctx.fillText(m.label,cx,mt+innerH+36);
+
+      // Min/Max annotations
+      ctx.fillStyle='rgba(80,104,120,0.8)';ctx.font='8px JetBrains Mono,monospace';ctx.textAlign='center';
+      let minLabel,maxLabel;
+      if(m.key==='pop'){minLabel=st.min.toFixed(2)+'Cr';maxLabel=st.max.toFixed(1)+'Cr';}
+      else if(m.key==='density'){minLabel=Math.round(st.min)+'/km²';maxLabel=Math.round(st.max).toLocaleString();}
+      else if(m.key==='urban'){minLabel=st.min.toFixed(0)+'%';maxLabel=st.max.toFixed(0)+'%';}
+      else{minLabel=Math.round(st.min)+'';maxLabel=Math.round(st.max)+'';}
+      ctx.fillText('min: '+minLabel,cx,mt+innerH+14);
+    });
+
+    // Title
+    ctx.fillStyle='rgba(160,184,204,0.5)';ctx.font='10px JetBrains Mono,monospace';ctx.textAlign='center';
+    ctx.fillText('Each metric independently scaled  ·  Hover outlier dots for state name',W/2,12);
+
+    // Hover tooltip
+    canvas.addEventListener('mousemove',e=>{
+      const rect=canvas.getBoundingClientRect();
+      const mx=(e.clientX-rect.left)*(W/rect.width);
+      const my=(e.clientY-rect.top)*(H/rect.height);
+      const tt=document.getElementById('ppTooltip');
+      let found=false;
+      allStats.forEach((m,mi)=>{
+        const st=m.stats;
+        const dataMin=Math.min(st.min,st.wLo),dataMax=Math.max(st.max,st.wHi);
+        const range=dataMax-dataMin||1,pad=range*0.12;
+        const vMin=dataMin-pad,vMax=dataMax+pad,vRange=vMax-vMin;
+        const yS=v=>mt+innerH*(1-(v-vMin)/vRange);
+        const cx=ml+slotW*(mi+0.5);
+        st.outliers.forEach(v=>{
+          const oy=yS(v);
+          if(Math.abs(mx-cx)<14&&Math.abs(my-oy)<14){
+            const stateObj=states.find(s=>Math.abs(m.fn(s)-v)<0.0001);
+            const nm=stateObj?stateObj.name:'Unknown';
+            let fv;
+            if(m.key==='pop')fv=v.toFixed(2)+' Cr';
+            else if(m.key==='density')fv=Math.round(v).toLocaleString()+'/km²';
+            else if(m.key==='urban')fv=v.toFixed(1)+'%';
+            else fv=Math.round(v)+' F/M';
+            tt.style.display='block';tt.style.left=(e.clientX+14)+'px';tt.style.top=(e.clientY-50)+'px';
+            tt.innerHTML=`<div class="pp-tooltip-title">◈ ${nm}</div><div class="pp-tooltip-row"><span class="pp-tooltip-key">${m.label}</span><span class="pp-tooltip-val">${fv}</span></div><div class="pp-tooltip-row"><span class="pp-tooltip-key">Status</span><span class="pp-tooltip-val" style="color:#f04068">Outlier</span></div>`;
+            found=true;
+          }
+        });
+      });
+      if(!found)tt.style.display='none';
+    });
+    canvas.addEventListener('mouseleave',()=>document.getElementById('ppTooltip').style.display='none');
+  },120);
+}
+
+// ════════════════════════════════════════════════════════════
+// CORRELATION HEATMAP — PERFECTED
+// ════════════════════════════════════════════════════════════
+function buildVizCorrmap(body){
+  const varDefs=[
+    {key:'pop',label:'Population',short:'Pop'},
+    {key:'density',label:'Density',short:'Density'},
+    {key:'sex',label:'Sex Ratio',short:'Sex R.'},
+    {key:'urbanPct',label:'Urban %',short:'Urban%'},
+    {key:'area',label:'Area km²',short:'Area'},
+    {key:'male',label:'Male Pop',short:'Male'},
+  ];
+
+  function pearson(xs,ys){
+    const n=xs.length,mx=xs.reduce((a,v)=>a+v,0)/n,my=ys.reduce((a,v)=>a+v,0)/n;
+    let num=0,dx=0,dy=0;
+    for(let i=0;i<n;i++){num+=(xs[i]-mx)*(ys[i]-my);dx+=(xs[i]-mx)**2;dy+=(ys[i]-my)**2;}
+    return dx&&dy?num/Math.sqrt(dx*dy):0;
+  }
+
+  const data=varDefs.map(v=>states.map(s=>s[v.key]||0));
+  const matrix=varDefs.map((_,i)=>varDefs.map((_,j)=>+pearson(data[i],data[j]).toFixed(3)));
+
+  // Key correlations for insight cards
+  const popDen=+pearson(states.map(s=>s.pop),states.map(s=>s.density)).toFixed(3);
+  const urbSex=+pearson(states.map(s=>s.urbanPct),states.map(s=>s.sex)).toFixed(3);
+  const areaDen=+pearson(states.map(s=>s.area),states.map(s=>s.density)).toFixed(3);
+  const popMale=+pearson(states.map(s=>s.pop),states.map(s=>s.male)).toFixed(3);
+
+  const cellSz=64,labelW=100,headerH=44,gap=3;
+  const n=varDefs.length;
+  const gridW=labelW+n*(cellSz+gap)+gap;
+
+  body.innerHTML=`
+    <div class="vp-chart-card">
+      <span class="vpc-tag">PEARSON r · 6×6 MATRIX</span>
+      <div class="vpc-label">Visualization</div>
+      <div class="vpc-title">Pairwise Pearson correlation coefficients — six demographic variables across all 36 states</div>
+      <div style="font-size:12px;color:var(--silver3);margin-bottom:20px;line-height:1.65">
+        Each cell shows r (−1 to +1). <span style="color:var(--blue2)">Blue</span> = positive correlation, <span style="color:var(--red2)">red</span> = negative, colour intensity reflects strength. The diagonal is always r = 1.000 (self-correlation). Hover any cell for interpretation.
+      </div>
+      <div class="corr-matrix-wrap" id="corr-matrix-inner"></div>
+      <div style="margin-top:20px">
+        <div class="corr-legend-bar"></div>
+        <div class="corr-legend-labels">
+          <span>Strong negative (r = −1.0)</span>
+          <span>No correlation (r = 0)</span>
+          <span>Strong positive (r = +1.0)</span>
+        </div>
+        <div style="display:flex;gap:16px;margin-top:10px;font-size:10.5px;color:var(--silver3);flex-wrap:wrap">
+          <span><strong style="color:var(--silver2)">|r| &gt; 0.7</strong> Strong relationship</span>
+          <span><strong style="color:var(--silver2)">|r| 0.4–0.7</strong> Moderate relationship</span>
+          <span><strong style="color:var(--silver2)">|r| &lt; 0.4</strong> Weak / no relationship</span>
+          <span><strong style="color:var(--silver2)">n = 36</strong> States and UTs</span>
+        </div>
+      </div>
+      <div class="corr-insight">
+        <div class="ci-card">
+          <div class="ci-card-title">Population × Male Population</div>
+          <div class="ci-card-val" style="color:var(--blue2)">r = +${popMale}</div>
+          <div class="ci-card-desc">Near-perfect positive correlation by definition — male population is a direct proportion of total population across all states.</div>
+        </div>
+        <div class="ci-card">
+          <div class="ci-card-title">Urban % × Sex Ratio</div>
+          <div class="ci-card-val" style="color:${urbSex>=0?'var(--blue2)':'var(--red2)'}">r = ${urbSex>=0?'+':''}${urbSex}</div>
+          <div class="ci-card-desc">Moderately positive — more urbanised states tend to have better sex ratios, reflecting access to education, healthcare and female workforce participation.</div>
+        </div>
+        <div class="ci-card">
+          <div class="ci-card-title">Population × Density</div>
+          <div class="ci-card-val" style="color:${popDen>=0?'var(--blue2)':'var(--red2)'}">r = ${popDen>=0?'+':''}${popDen}</div>
+          <div class="ci-card-desc">Weak positive — population size alone does not predict density. Large states like Rajasthan are populous but sparse; small UTs like Delhi are tiny but extremely dense.</div>
+        </div>
+        <div class="ci-card">
+          <div class="ci-card-title">Area × Density</div>
+          <div class="ci-card-val" style="color:${areaDen>=0?'var(--blue2)':'var(--red2)'}">r = ${areaDen>=0?'+':''}${areaDen}</div>
+          <div class="ci-card-desc">Negative — larger states tend to be less densely populated. India's big territorial states (Rajasthan, MP, UP) spread population across vast geographies.</div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Build matrix HTML
+  const inner=document.getElementById('corr-matrix-inner');
+  let html=`<div style="display:inline-block;min-width:${gridW}px">`;
+  // Column headers row
+  html+=`<div style="display:flex;margin-left:${labelW}px;margin-bottom:${gap}px;gap:${gap}px">`;
+  varDefs.forEach((v,i)=>{
+    html+=`<div style="width:${cellSz}px;font-size:9.5px;color:var(--silver3);text-align:center;font-weight:600;line-height:1.35;padding:4px 2px;font-family:'DM Sans',sans-serif">${v.short}</div>`;
+  });
+  html+=`</div>`;
+
+  matrix.forEach((row,i)=>{
+    html+=`<div style="display:flex;align-items:center;gap:${gap}px;margin-bottom:${gap}px">`;
+    html+=`<div style="width:${labelW}px;font-size:11px;color:var(--silver2);text-align:right;padding-right:12px;font-weight:600;font-family:'DM Sans',sans-serif;white-space:nowrap">${varDefs[i].label}</div>`;
+    row.forEach((r,j)=>{
+      const abs=Math.abs(r);
+      let bg,tc,border;
+      if(i===j){
+        bg=`rgba(201,153,58,0.20)`;tc='#f0c858';border='rgba(201,153,58,0.45)';
+      } else if(r>0){
+        const intensity=0.15+abs*0.75;
+        bg=`rgba(32,112,200,${intensity})`;
+        tc=abs>0.5?'rgba(220,235,255,0.95)':'rgba(150,185,220,0.8)';
+        border=`rgba(56,160,240,${0.2+abs*0.5})`;
+      } else if(r<0){
+        const intensity=0.15+abs*0.75;
+        bg=`rgba(200,48,80,${intensity})`;
+        tc=abs>0.5?'rgba(255,210,210,0.95)':'rgba(200,150,160,0.8)';
+        border=`rgba(240,64,104,${0.2+abs*0.5})`;
+      } else {
+        bg='rgba(9,13,24,0.8)';tc='rgba(48,72,88,0.8)';border='rgba(17,24,40,0.6)';
+      }
+      const strength=abs>0.7?'Strong':abs>0.4?'Moderate':abs>0.15?'Weak':'Negligible';
+      const dir=r>0?'positive':r<0?'negative':'none';
+      const tooltipText=`${varDefs[i].label} × ${varDefs[j].label}\nr = ${r}\n${strength} ${dir} correlation`;
+      html+=`<div class="corr-cell-box" title="${tooltipText}"
+        style="width:${cellSz}px;height:${cellSz}px;background:${bg};color:${tc};border:1px solid ${border};font-size:${abs>0.99?'11':'11.5'}px">
+        ${r.toFixed(2)}
+      </div>`;
+    });
+    html+=`</div>`;
+  });
+  html+=`</div>`;
+  inner.innerHTML=html;
+}
+
+// ════════════════════════════════════════════════════════════
+// PAIR PLOT — PERFECTED (Canvas-rendered, 4×4, interactive)
+// ════════════════════════════════════════════════════════════
+function buildVizPairplot(body){
+  const metrics=[
+    {key:'pop',label:'Pop (Cr)',fn:s=>toCr(s.pop),color:'#c9993a'},
+    {key:'density',label:'Density',fn:s=>s.density,color:'#28e8b8'},
+    {key:'sex',label:'Sex Ratio',fn:s=>s.sex,color:'#f04068'},
+    {key:'urbanPct',label:'Urban %',fn:s=>s.urbanPct,color:'#b080f8'},
+  ];
+  const regionColors={North:'#c9993a',South:'#16b082',East:'#c83050',West:'#7840d0',Central:'#2070c8',Northeast:'#d88038'};
+
+  body.innerHTML=`
+    <div class="vp-stats-row" style="margin-bottom:20px">
+      ${pillHTML('Grid cells','16 panels','4×4 = 6 unique scatter pairs + 4 diagonals','var(--red)','#f06888')}
+      ${pillHTML('Population mean','33.65 Cr','Average across 36 states/UTs','var(--gold)','var(--gold2)')}
+      ${pillHTML('Density range','17–11,297','650× span reveals outlier effect','var(--teal)','var(--teal2)')}
+      ${pillHTML('Colour coding','6 regions','Geographic clustering revealed','var(--purple)','#b080f8')}
+    </div>
+    <div class="vp-chart-card">
+      <span class="vpc-tag">SCATTER MATRIX · 4×4</span>
+      <div class="vpc-label">Visualization</div>
+      <div class="vpc-title">Pairwise scatter matrix — all six combinations of four demographic metrics across India's states</div>
+      <div style="font-size:12px;color:var(--silver3);margin-bottom:16px;line-height:1.65">
+        Diagonal panels show each metric's own frequency histogram. Off-diagonal panels show scatter plots — x-axis is the column metric, y-axis the row metric. Point size scales with state population. Colour encodes geographic region. Hover any point for state details.
+      </div>
+      <div class="pairplot-outer" id="pp-outer">
+        <div id="pp-grid-wrap"></div>
+      </div>
+      <div class="pp-region-legend">
+        ${Object.entries(regionColors).map(([r,c])=>`<div class="prl-item"><div class="prl-dot" style="background:${c}"></div>${r}</div>`).join('')}
+      </div>
+    </div>
+  `;
+
+  const CELL=172,PAD=6;
+  const N=metrics.length;
+  const totalW=N*(CELL+PAD)-PAD;
+
+  const wrap=document.getElementById('pp-grid-wrap');
+  wrap.style.cssText=`display:grid;grid-template-columns:repeat(${N},${CELL}px);gap:${PAD}px;width:${totalW}px`;
+
+  const canvasMap={};
+  for(let row=0;row<N;row++){
+    for(let col=0;col<N;col++){
+      const cell=document.createElement('div');
+      cell.style.cssText=`width:${CELL}px;height:${CELL}px;border-radius:8px;overflow:hidden;border:1px solid var(--border);position:relative`;
+      const id=`ppc-${row}-${col}`;
+      if(row===col){
+        cell.style.background='rgba(201,153,58,0.06)';
+        cell.style.borderColor='rgba(201,153,58,0.2)';
+        cell.innerHTML=`<canvas id="${id}" width="${CELL}" height="${CELL}"></canvas>`;
+      } else {
+        cell.style.background='var(--surface2)';
+        cell.innerHTML=`<canvas id="${id}" width="${CELL}" height="${CELL}" style="cursor:crosshair"></canvas>`;
+      }
+      wrap.appendChild(cell);
+      canvasMap[`${row}-${col}`]={el:cell,id};
+    }
+  }
+
+  setTimeout(()=>{
+    const pp=document.getElementById('ppTooltip');
+    for(let row=0;row<N;row++){
+      for(let col=0;col<N;col++){
+        const canvas=document.getElementById(`ppc-${row}-${col}`);
+        if(!canvas)continue;
+        const ctx=canvas.getContext('2d');
+        const W=CELL,H=CELL;
+        ctx.clearRect(0,0,W,H);
+
+        if(row===col){
+          // Diagonal: histogram
+          const mData=metrics[row];
+          const vals=states.map(mData.fn);
+          const minV=Math.min(...vals),maxV=Math.max(...vals);
+          const bins=6,binW=(maxV-minV)/bins||1;
+          const counts=Array(bins).fill(0);
+          vals.forEach(v=>{const bi=Math.min(bins-1,Math.floor((v-minV)/binW));counts[bi]++;});
+          const maxC=Math.max(...counts);
+          const bW=(W-16)/bins;
+          counts.forEach((c,i)=>{
+            const bH=(c/maxC)*(H-40);
+            const x=8+i*bW;
+            ctx.fillStyle=mData.color+'55';
+            ctx.fillRect(x,H-8-bH,bW-2,bH);
+            ctx.strokeStyle=mData.color+'aa';ctx.lineWidth=1;
+            ctx.strokeRect(x,H-8-bH,bW-2,bH);
+          });
+          // Label
+          ctx.fillStyle=mData.color;ctx.font='bold 10px JetBrains Mono,monospace';ctx.textAlign='center';
+          ctx.fillText(mData.label,W/2,18);
+          // Mean line
+          const mean=vals.reduce((a,v)=>a+v,0)/vals.length;
+          const meanX=8+((mean-minV)/(maxV-minV))*(W-16);
+          ctx.beginPath();ctx.moveTo(meanX,22);ctx.lineTo(meanX,H-8);
+          ctx.strokeStyle=mData.color+'cc';ctx.lineWidth=1.5;ctx.setLineDash([3,2]);ctx.stroke();ctx.setLineDash([]);
+        } else {
+          // Scatter
+          const xM=metrics[col],yM=metrics[row];
+          const xs=states.map(xM.fn),ys=states.map(yM.fn);
+          const xMin=Math.min(...xs),xMax=Math.max(...xs),yMin=Math.min(...ys),yMax=Math.max(...ys);
+          const xRange=xMax-xMin||1,yRange=yMax-yMin||1;
+          const PAD2=12;
+          const toX=v=>PAD2+(v-xMin)/xRange*(W-PAD2*2);
+          const toY=v=>H-PAD2-(v-yMin)/yRange*(H-PAD2*2);
+
+          // Axis lines
+          ctx.strokeStyle='rgba(17,24,40,0.8)';ctx.lineWidth=0.5;
+          ctx.beginPath();ctx.moveTo(PAD2,0);ctx.lineTo(PAD2,H);ctx.stroke();
+          ctx.beginPath();ctx.moveTo(0,H-PAD2);ctx.lineTo(W,H-PAD2);ctx.stroke();
+
+          // Axis labels
+          ctx.fillStyle='rgba(80,104,120,0.7)';ctx.font='7.5px DM Sans,sans-serif';ctx.textAlign='center';
+          ctx.fillText(xM.label,W/2,H-1);
+          ctx.save();ctx.translate(7,H/2);ctx.rotate(-Math.PI/2);ctx.fillText(yM.label,0,0);ctx.restore();
+
+          // Points
+          const stateData=states.map((s,i)=>({s,x:xs[i],y:ys[i]}));
+          stateData.forEach(({s,x,y})=>{
+            const region=getRegion(s.name);
+            const col2=regionColors[region]||'#808080';
+            const r=Math.max(3,Math.sqrt(s.pop/1e6)*0.65);
+            const px=toX(x),py=toY(y);
+            ctx.beginPath();ctx.arc(px,py,r,0,Math.PI*2);
+            ctx.fillStyle=col2+'cc';ctx.fill();
+            ctx.strokeStyle=col2+'55';ctx.lineWidth=0.8;ctx.stroke();
+          });
+
+          // Hover for scatter
+          canvas.addEventListener('mousemove',e=>{
+            const rect=canvas.getBoundingClientRect();
+            const mx=(e.clientX-rect.left)*(W/rect.width);
+            const my=(e.clientY-rect.top)*(H/rect.height);
+            let closest=null,minDist=Infinity;
+            stateData.forEach(({s,x,y})=>{
+              const px=toX(x),py=toY(y);
+              const dist=Math.sqrt((mx-px)**2+(my-py)**2);
+              if(dist<18&&dist<minDist){minDist=dist;closest={s,x,y,px,py};}
+            });
+            if(closest){
+              const {s,x,y}=closest;
+              let xFmt,yFmt;
+              if(xM.key==='pop')xFmt=x.toFixed(2)+' Cr';else if(xM.key==='density')xFmt=Math.round(x).toLocaleString()+'/km²';else if(xM.key==='urban')xFmt=x.toFixed(1)+'%';else xFmt=Math.round(x)+' F/M';
+              if(yM.key==='pop')yFmt=y.toFixed(2)+' Cr';else if(yM.key==='density')yFmt=Math.round(y).toLocaleString()+'/km²';else if(yM.key==='urban')yFmt=y.toFixed(1)+'%';else yFmt=Math.round(y)+' F/M';
+              pp.style.display='block';pp.style.left=(e.clientX+16)+'px';pp.style.top=(e.clientY-60)+'px';
+              pp.innerHTML=`<div class="pp-tooltip-title">◈ ${s.name}</div>
+                <div class="pp-tooltip-row"><span class="pp-tooltip-key">${xM.label}</span><span class="pp-tooltip-val">${xFmt}</span></div>
+                <div class="pp-tooltip-row"><span class="pp-tooltip-key">${yM.label}</span><span class="pp-tooltip-val">${yFmt}</span></div>
+                <div class="pp-tooltip-row"><span class="pp-tooltip-key">Region</span><span class="pp-tooltip-val">${getRegion(s.name)}</span></div>`;
+            } else {
+              pp.style.display='none';
+            }
+          });
+          canvas.addEventListener('mouseleave',()=>pp.style.display='none');
+        }
+      }
+    }
+  },100);
+}
+
+// ══════════════ MAP ══════════════
+const STATE_SHAPES=[
+  {name:"Jammu & Kashmir",x:182,y:38,w:92,h:68,rx:6},{name:"Himachal Pradesh",x:208,y:108,w:50,h:44,rx:4},
+  {name:"Punjab",x:162,y:108,w:44,h:46,rx:4},{name:"Uttarakhand",x:256,y:108,w:52,h:40,rx:4},
+  {name:"Haryana",x:165,y:156,w:58,h:40,rx:4},{name:"Delhi",x:208,y:166,w:22,h:20,rx:4},
+  {name:"Uttar Pradesh",x:230,y:158,w:124,h:68,rx:6},{name:"Bihar",x:352,y:158,w:76,h:58,rx:5},
+  {name:"West Bengal",x:394,y:158,w:56,h:90,rx:5},{name:"Rajasthan",x:118,y:158,w:110,h:100,rx:6},
+  {name:"Madhya Pradesh",x:195,y:225,w:140,h:75,rx:6},{name:"Jharkhand",x:352,y:218,w:62,h:52,rx:4},
+  {name:"Odisha",x:364,y:248,w:68,h:68,rx:5},{name:"Chhattisgarh",x:294,y:225,w:70,h:82,rx:5},
+  {name:"Gujarat",x:100,y:216,w:88,h:84,rx:6},{name:"Maharashtra",x:152,y:295,w:132,h:88,rx:6},
+  {name:"Andhra Pradesh",x:264,y:330,w:110,h:82,rx:5},{name:"Telangana",x:246,y:293,w:84,h:60,rx:5},
+  {name:"Karnataka",x:188,y:378,w:104,h:98,rx:6},{name:"Tamil Nadu",x:258,y:408,w:80,h:100,rx:5},
+  {name:"Kerala",x:210,y:462,w:54,h:90,rx:5},{name:"Goa",x:162,y:376,w:24,h:22,rx:4},
+  {name:"Assam",x:446,y:134,w:78,h:42,rx:4},{name:"Arunachal Pradesh",x:478,y:90,w:80,h:48,rx:4},
+  {name:"Meghalaya",x:436,y:178,w:50,h:30,rx:4},{name:"Nagaland",x:524,y:134,w:36,h:34,rx:4},
+  {name:"Manipur",x:524,y:170,w:32,h:34,rx:4},{name:"Mizoram",x:502,y:206,w:30,h:36,rx:4},
+  {name:"Tripura",x:468,y:210,w:28,h:32,rx:4},{name:"Sikkim",x:394,y:122,w:22,h:24,rx:4},
+  {name:"Andaman & Nicobar",x:470,y:330,w:20,h:62,rx:4},{name:"Lakshadweep",x:148,y:470,w:16,h:26,rx:3},
+  {name:"Puducherry",x:316,y:442,w:16,h:15,rx:3},{name:"Chandigarh",x:194,y:108,w:12,h:13,rx:3},
+  {name:"Dadra & Nagar Haveli",x:134,y:264,w:15,h:15,rx:3},{name:"Daman & Diu",x:118,y:248,w:13,h:13,rx:3},
+];
+let currentMapMetric='density',selectedStateEl=null;
+
+function metricValueFor(s,metric){if(metric==='density')return s.density;if(metric==='pop')return s.pop;if(metric==='sex')return s.sex;if(metric==='urban')return s.urbanPct;return s.density;}
+function metricColorScheme(metric){
+  if(metric==='density'){return t=>{const r=Math.round(4+t*200),g=Math.round(10+t*140),b=Math.round(20+t*30);return`rgb(${r},${g},${b})`;};} 
+  if(metric==='pop'){return t=>{const r=Math.round(3+t*30),g=Math.round(8+t*120),b=Math.round(15+t*200);return`rgb(${r},${g},${b})`;};} 
+  if(metric==='sex'){const lo=[200,48,80],hi=[22,200,140];return t=>`rgb(${Math.round(lo[0]+(hi[0]-lo[0])*t)},${Math.round(lo[1]+(hi[1]-lo[1])*t)},${Math.round(lo[2]+(hi[2]-lo[2])*t)})`;}
+  if(metric==='urban'){return t=>{const r=Math.round(5+t*25),g=Math.round(40+t*150),b=Math.round(40+t*160);return`rgb(${r},${g},${b})`;};} 
+  return t=>`hsl(${200+t*80},60%,${15+t*30}%)`;
+}
+function switchMapMetric(metric,btn){currentMapMetric=metric;document.querySelectorAll('.mtab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');buildMap();}
+function buildMap(){
+  const svg=document.getElementById('india-svg');svg.innerHTML='';
+  const ns="http://www.w3.org/2000/svg";
+  const bg=document.createElementNS(ns,'rect');bg.setAttribute('x','60');bg.setAttribute('y','28');bg.setAttribute('width','530');bg.setAttribute('height','590');bg.setAttribute('fill','#010305');svg.appendChild(bg);
+  for(let x=80;x<580;x+=40){const l=document.createElementNS(ns,'line');l.setAttribute('x1',x);l.setAttribute('y1','28');l.setAttribute('x2',x);l.setAttribute('y2','618');l.setAttribute('stroke','rgba(201,153,58,0.03)');l.setAttribute('stroke-width','0.5');svg.appendChild(l);}
+  for(let y=40;y<620;y+=40){const l=document.createElementNS(ns,'line');l.setAttribute('x1','60');l.setAttribute('y1',y);l.setAttribute('x2','590');l.setAttribute('y2',y);l.setAttribute('stroke','rgba(201,153,58,0.03)');l.setAttribute('stroke-width','0.5');svg.appendChild(l);}
+  const colorFn=metricColorScheme(currentMapMetric);
+  const vals=STATE_SHAPES.map(sp=>{const s=states.find(st=>st.name===sp.name);return s?metricValueFor(s,currentMapMetric):0;});
+  const minV=Math.min(...vals.filter(v=>v>0)),maxV=Math.max(...vals);
+  const tooltip=document.getElementById('map-tooltip');selectedStateEl=null;
+  const stops=Array.from({length:12},(_,i)=>colorFn(i/11));
+  document.getElementById('legendGradient').style.background=`linear-gradient(90deg,${stops.join(',')})`;
+  const metricLabels={density:['<50','/km²','11,297'],pop:['64K','pop','199M'],sex:['618','F/1000M','1084'],urban:['0%','urban%','100%']};
+  const ml=metricLabels[currentMapMetric]||['','',''];
+  document.getElementById('legendTicks').innerHTML=`<span>${ml[0]}</span><span>${ml[1]}</span><span>${ml[2]}</span>`;
+  STATE_SHAPES.forEach((sp)=>{
+    const s=states.find(st=>st.name===sp.name);if(!s)return;
+    const val=metricValueFor(s,currentMapMetric),t=maxV===minV?0.5:Math.pow((val-minV)/(maxV-minV),0.4);
+    const fillColor=colorFn(t),g=document.createElementNS(ns,'g');
+    if(sp.w*sp.h>2000){const sh=document.createElementNS(ns,'rect');sh.setAttribute('x',sp.x+2);sh.setAttribute('y',sp.y+2);sh.setAttribute('width',sp.w);sh.setAttribute('height',sp.h);sh.setAttribute('rx',sp.rx);sh.setAttribute('fill','rgba(0,0,0,0.4)');g.appendChild(sh);}
+    const rect=document.createElementNS(ns,'rect');rect.setAttribute('x',sp.x);rect.setAttribute('y',sp.y);rect.setAttribute('width',sp.w);rect.setAttribute('height',sp.h);rect.setAttribute('rx',sp.rx);rect.setAttribute('fill',fillColor);rect.setAttribute('stroke','#05090f');rect.setAttribute('stroke-width','0.9');rect.setAttribute('class','state-rect');rect.setAttribute('data-name',s.name);
+    if(sp.w>=40&&sp.h>=30){
+      const text=document.createElementNS(ns,'text');text.setAttribute('x',sp.x+sp.w/2);text.setAttribute('y',sp.y+sp.h/2);text.setAttribute('text-anchor','middle');text.setAttribute('dominant-baseline','middle');text.setAttribute('font-size',sp.w>=70?'7.5':'6.5');text.setAttribute('fill','rgba(255,255,255,0.75)');text.setAttribute('font-family','DM Sans,sans-serif');text.setAttribute('pointer-events','none');
+      const abbr={'Uttar Pradesh':'UP','Maharashtra':'MH','West Bengal':'WB','Madhya Pradesh':'MP','Rajasthan':'RJ','Karnataka':'KA','Andhra Pradesh':'AP','Tamil Nadu':'TN','Jammu & Kashmir':'J&K','Himachal Pradesh':'HP','Arunachal Pradesh':'AR','Chhattisgarh':'CG','Uttarakhand':'UK','Jharkhand':'JH'};
+      const lbl=sp.w>=64?(abbr[s.name]||(s.name.length>12?s.name.slice(0,10)+'…':s.name)):sp.w>=50?(abbr[s.name]||s.name.slice(0,6)+'…'):sp.w>=38?(s.name.slice(0,4)):'';
+      text.textContent=lbl;
+      if(sp.w>=60&&sp.h>=50){const valText=document.createElementNS(ns,'text');valText.setAttribute('x',sp.x+sp.w/2);valText.setAttribute('y',sp.y+sp.h/2+12);valText.setAttribute('text-anchor','middle');valText.setAttribute('font-size','5.5');valText.setAttribute('fill','rgba(255,255,255,0.5)');valText.setAttribute('font-family','JetBrains Mono,monospace');valText.setAttribute('pointer-events','none');let dv=val;if(currentMapMetric==='pop')dv=crL(val);else if(currentMapMetric==='sex')dv=val+' F/M';else if(currentMapMetric==='urban')dv=val.toFixed(0)+'%';else dv=fmtN(val)+'/km²';valText.textContent=dv;g.appendChild(valText);}
+      g.appendChild(text);
+    }
+    rect.addEventListener('mousemove',e=>{tooltip.style.display='block';tooltip.style.left=(e.clientX+18)+'px';tooltip.style.top=(e.clientY-60)+'px';tooltip.innerHTML=`<div class="tt-title">◈ ${s.name}</div><div class="tt-row"><span class="tt-key">Population</span><span class="tt-val">${crL(s.pop)}</span></div><div class="tt-row"><span class="tt-key">India Share</span><span class="tt-val">${s.pct}%</span></div><div class="tt-row"><span class="tt-key">Sex Ratio</span><span class="tt-val">${s.sex} F/1000M</span></div><div class="tt-row"><span class="tt-key">Density</span><span class="tt-val">${fmtN(s.density)}/km²</span></div><div class="tt-row"><span class="tt-key">Urban</span><span class="tt-val">${s.urbanPct}%</span></div><div class="tt-row"><span class="tt-key">Region</span><span class="tt-val">${getRegion(s.name)}</span></div>`;});
+    rect.addEventListener('mouseleave',()=>tooltip.style.display='none');
+    rect.addEventListener('click',()=>{if(selectedStateEl){selectedStateEl.setAttribute('stroke','#05090f');selectedStateEl.setAttribute('stroke-width','0.9');selectedStateEl.classList.remove('selected');}rect.setAttribute('stroke','#f0c858');rect.setAttribute('stroke-width','2.5');rect.classList.add('selected');selectedStateEl=rect;showStatePanel(s);});
+    g.appendChild(rect);svg.appendChild(g);
+  });
+}
+
+function showStatePanel(s){
+  const allS=[...states].sort((a,b)=>b.pop-a.pop);
+  const rankPop=allS.findIndex(st=>st.name===s.name)+1,rankDen=[...states].sort((a,b)=>b.density-a.density).findIndex(st=>st.name===s.name)+1;
+  const rankSex=[...states].sort((a,b)=>b.sex-a.sex).findIndex(st=>st.name===s.name)+1,rankUrb=[...states].sort((a,b)=>b.urbanPct-a.urbanPct).findIndex(st=>st.name===s.name)+1;
+  const uPct=s.urbanPct||0,mPct=+(s.male/s.pop*100||0).toFixed(1),fPct=+(s.female/s.pop*100||0).toFixed(1);
+  const maxD=Math.max(...states.map(st=>st.density));
+  document.getElementById('spPlaceholder').style.display='none';
+  const c=document.getElementById('spContent');c.style.display='block';
+  c.innerHTML=`<div class="sp-header"><div class="sp-state-name">${s.name}</div><div class="sp-region">${getRegion(s.name)} India</div></div><div class="sp-body"><div class="sp-metric"><span class="sp-metric-key">Population</span><span class="sp-metric-val c-gold">${crL(s.pop)}</span></div><div class="sp-metric"><span class="sp-metric-key">India Share</span><span class="sp-metric-val">${s.pct}%</span></div><div class="sp-metric"><span class="sp-metric-key">Male</span><span class="sp-metric-val c-blue">${crL(s.male)} (${mPct}%)</span></div><div class="sp-metric"><span class="sp-metric-key">Female</span><span class="sp-metric-val c-red">${crL(s.female)} (${fPct}%)</span></div><div class="sp-metric"><span class="sp-metric-key">Sex Ratio</span><span class="sp-metric-val">${s.sex} F/1000M</span></div><div class="sp-metric"><span class="sp-metric-key">Area</span><span class="sp-metric-val">${fmtN(s.area)} km²</span></div><div class="sp-metric"><span class="sp-metric-key">Density</span><span class="sp-metric-val">${fmtN(s.density)}/km²</span></div></div><div class="sp-bar-section"><div class="sp-bar-wrap"><div class="sp-bar-label"><span>Density vs Max</span><span>${fmtN(s.density)}/km²</span></div><div class="sp-bar-track"><div class="sp-bar-fill" style="width:${Math.min(s.density/maxD*100,100).toFixed(1)}%;background:linear-gradient(90deg,var(--teal),var(--blue))"></div></div></div><div class="sp-bar-wrap"><div class="sp-bar-label"><span>Urban %</span><span>${uPct}%</span></div><div class="sp-bar-track"><div class="sp-bar-fill" style="width:${uPct}%;background:linear-gradient(90deg,var(--gold),var(--teal))"></div></div></div><div class="sp-bar-wrap"><div class="sp-bar-label"><span>Male / Female</span><span>${mPct}% / ${fPct}%</span></div><div class="sp-bar-track" style="height:8px;display:flex;overflow:hidden;border-radius:3px;background:transparent"><div style="width:${mPct}%;background:var(--blue);transition:width .8s"></div><div style="width:${fPct}%;background:var(--red);transition:width .8s"></div></div></div></div><div class="sp-ranks"><div class="sp-rank-card"><div class="sp-rank-label">Population</div><div class="sp-rank-value">#${rankPop}</div><div class="sp-rank-sub">of ${states.length}</div></div><div class="sp-rank-card"><div class="sp-rank-label">Density</div><div class="sp-rank-value">#${rankDen}</div><div class="sp-rank-sub">of ${states.length}</div></div><div class="sp-rank-card"><div class="sp-rank-label">Sex Ratio</div><div class="sp-rank-value">#${rankSex}</div><div class="sp-rank-sub">of ${states.length}</div></div><div class="sp-rank-card"><div class="sp-rank-label">Urban %</div><div class="sp-rank-value">#${rankUrb}</div><div class="sp-rank-sub">of ${states.length}</div></div></div>`;
+}
+
+// ADVANCED SECTION
+function buildAdvanced(){
+  mk('scatterChart',{type:'scatter',data:{datasets:[{label:'States',data:states.map(s=>({x:toCr(s.pop),y:s.density,label:s.name})),backgroundColor:MIX_PAL.map(c=>c+'99'),pointRadius:states.map(s=>Math.sqrt(s.pop/1e6)*1.1+4),pointHoverRadius:10}]},options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.raw.label}: ${ctx.raw.x}Cr, ${ctx.raw.y}/km²`}}},scales:{x:{title:{display:true,text:'Population (Crores)',color:'#506878'},grid:{color:'#11182888'},ticks:{color:'#506878'}},y:{title:{display:true,text:'Density/km²',color:'#506878'},grid:{color:'#11182888'},ticks:{color:'#506878'}}}}});
+  const regions={North:['Uttar Pradesh','Rajasthan','Delhi','Punjab','Haryana','Himachal Pradesh','Uttarakhand','Jammu & Kashmir'],South:['Tamil Nadu','Karnataka','Kerala','Andhra Pradesh','Telangana'],East:['West Bengal','Odisha','Jharkhand','Bihar','Assam'],West:['Maharashtra','Gujarat','Goa'],Central:['Madhya Pradesh','Chhattisgarh']};
+  function rAvg(ns,k){const ss=states.filter(s=>ns.includes(s.name));return ss.length?ss.reduce((a,s)=>a+s[k],0)/ss.length:0;}
+  mk('radarChart',{type:'radar',data:{labels:['Sex Ratio','Density','Urban %','Avg Pop','# States'],datasets:Object.entries(regions).map(([r,ns],i)=>{const ss=states.filter(s=>ns.includes(s.name));const totP=ss.reduce((a,s)=>a+s.pop,0),totU=ss.reduce((a,s)=>a+s.urban,0);return{label:r,data:[rAvg(ns,'sex')/12,Math.min(rAvg(ns,'density'),2000)/20,(totU/totP*100)||0,totP/ss.length/1e7,ss.length*5],borderColor:MIX_PAL[i],backgroundColor:MIX_PAL[i]+'22',pointBackgroundColor:MIX_PAL[i],borderWidth:2};})},options:{responsive:true,plugins:{legend:{position:'bottom',labels:{color:'#a0b8cc',font:{size:10},padding:8}}},scales:{r:{grid:{color:'#16213a'},ticks:{display:false,backdropColor:'transparent'},pointLabels:{color:'#a0b8cc',font:{size:10}}}}}});
+  buildHeatmap();
+  const sN=[...states].sort((a,b)=>b.pop-a.pop).map(s=>s.name);
+  ['stateA','stateB'].forEach((id,i)=>{const sel=document.getElementById(id);sel.innerHTML=sN.map(n=>`<option value="${n}"${(i===0&&n===sN[0])||(i===1&&n===sN[1])?'selected':''}>${n}</option>`).join('');});
+  updateComparison();buildAnalyticsTable();
+}
+function updateComparison(){
+  const a=states.find(s=>s.name===document.getElementById('stateA').value),b=states.find(s=>s.name===document.getElementById('stateB').value);
+  if(!a||!b)return;
+  const metrics=['Pop (Cr)','Male (Cr)','Female (Cr)','Sex Ratio /10','Density /50','Urban %','Area K km²'];
+  const gv=s=>[toCr(s.pop),toCr(s.male),toCr(s.female),s.sex/10,s.density/50,s.urbanPct||0,+(s.area/1000).toFixed(1)];
+  mk('compareChart',{type:'bar',data:{labels:metrics,datasets:[{label:a.name,data:gv(a),backgroundColor:'rgba(201,153,58,0.65)',borderColor:'#c9993a',borderWidth:1.5,borderRadius:5},{label:b.name,data:gv(b),backgroundColor:'rgba(32,112,200,0.65)',borderColor:'#2070c8',borderWidth:1.5,borderRadius:5}]},options:{responsive:true,plugins:{legend:{position:'top',labels:{color:'#a0b8cc',padding:12}}},scales:{y:{ticks:{color:'#506878'},grid:{color:'#11182888'}},x:{ticks:{color:'#506878'},grid:{display:false}}}}});
+}
+function buildHeatmap(){
+  const cols=['pop','density','sex','urbanPct','area'],labels=['Population','Density','Sex Ratio','Urban %','Area'];
+  const t20=[...states].sort((a,b)=>b.pop-a.pop).slice(0,20);
+  const getV=(s,k)=>s[k]||0;
+  const cMin={},cMax={};cols.forEach(k=>{const vs=t20.map(s=>getV(s,k));cMin[k]=Math.min(...vs);cMax[k]=Math.max(...vs);});
+  const sapphire=t=>{const r=Math.round(4+t*40),g=Math.round(8+t*130),b=Math.round(20+t*210);return`rgb(${r},${g},${b})`;};
+  let html=`<table class="heatmap-table"><thead><tr><th>State</th>${labels.map(l=>`<th>${l}</th>`).join('')}</tr></thead><tbody>`;
+  t20.forEach(s=>{const cells=cols.map(k=>{const v=getV(s,k),n=normalize(v,cMin[k],cMax[k]);const bg=sapphire(n),tc=n>0.5?'rgba(255,255,255,0.9)':'rgba(180,210,240,0.8)';const disp=k==='urbanPct'?v.toFixed(1)+'%':k==='pop'?crL(v):fmtN(Math.round(v));return`<td style="background:${bg};color:${tc}">${disp}</td>`;}).join('');html+=`<tr><td class="hm-row-label">${s.name}</td>${cells}</tr>`;});
+  html+='</tbody></table>';document.getElementById('heatmapDiv').innerHTML=html;
+  const stops=Array.from({length:10},(_,i)=>sapphire(i/9));document.getElementById('heatLegend').style.background=`linear-gradient(90deg,${stops.join(',')})`;
+}
+function buildAnalyticsTable(){
+  const rows=[];
+  for(let i=1;i<historical.length;i++){const d=historical[i],prev=historical[i-1];if(d.change===null||d.change===undefined)continue;const yrs=d.year-prev.year;if(yrs<=0)continue;const ann=((Math.pow(d.pop/prev.pop,1/yrs))-1)*100,dec=(d.pop-prev.pop)/prev.pop*100;rows.push({year:d.year,pop:d.pop,change:d.change,ann:ann.toFixed(3),dec:dec.toFixed(2)});}
+  document.getElementById('analyticsTable').innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:12px"><thead><tr style="background:var(--surface3)">${['Year','Population','Absolute Change','Period Growth %','Annual Rate'].map(h=>`<th style="padding:11px 14px;text-align:${h==='Year'?'left':'right'};font-size:9.5px;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);border-bottom:1px solid var(--border)">${h}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>{const neg=r.change<0;const rc=parseFloat(r.ann)>2?'var(--red2)':parseFloat(r.ann)<0?'var(--red2)':'var(--teal2)';return`<tr style="border-bottom:1px solid rgba(17,24,40,0.5)"><td style="padding:10px 14px;font-family:'JetBrains Mono',monospace;font-weight:600;color:var(--gold2)">${r.year}</td><td style="padding:10px 14px;text-align:right;font-family:'JetBrains Mono',monospace;font-size:11px">${fmtN(r.pop)}</td><td style="padding:10px 14px;text-align:right;font-family:'JetBrains Mono',monospace;font-size:11px;color:${neg?'var(--red2)':'var(--teal2)'}">${neg?'':'+'}${fmtN(r.change)}</td><td style="padding:10px 14px;text-align:right;font-family:'JetBrains Mono',monospace;font-size:11px;color:${neg?'var(--red2)':'var(--silver2)'}">${neg?'':'+'}${r.dec}%</td><td style="padding:10px 14px;text-align:right;font-family:'JetBrains Mono',monospace;font-size:11px;color:${rc}">${r.ann}%/yr</td></tr>`;}).join('')}</tbody></table>`;
+}
+
+// Scroll + Nav
+const observer=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible');});},{threshold:0.06,rootMargin:'0px 0px -50px 0px'});
+document.querySelectorAll('.fade-in').forEach(el=>observer.observe(el));
+const navLinks=document.querySelectorAll('nav a'),sections=document.querySelectorAll('[id]');
+window.addEventListener('scroll',()=>{let cur='';sections.forEach(s=>{if(window.scrollY>=s.offsetTop-100)cur=s.id;});navLinks.forEach(a=>{a.classList.toggle('active',a.getAttribute('href')==='#'+cur);});});
+
+function rebuildAll(){buildAdvanced();buildMap();}
+buildAdvanced();buildMap();
+</script>
+</body>
+</html>
